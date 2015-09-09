@@ -1,7 +1,7 @@
 #ifndef __NI_H__
 #define __NI_H__
 
-#include "end_port.h"
+#include "endpoint_port.h"
 
 typedef struct {
     int		    fd;
@@ -19,10 +19,10 @@ struct _NI {
         /* TODO: add PacketNgin VNIC here */
     };
     /* Attached port to this */
-    EndPort* port;
+    EndPointPort* port;
 };	
 
-NI* ni_create(EndPort* port);
+NI* ni_create(EndPointPort* port);
 void ni_destroy(NI* ni);
 
 #endif /* __NI_H__*/ 

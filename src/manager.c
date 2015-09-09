@@ -131,7 +131,7 @@ Manager* get_manager() {
 	return manager;
 }
 
-NI* port_attach(EndPort* port) {
+NI* port_attach(EndPointPort* port) {
 	NI* ni = ni_create(port);	
 	if(!ni)
 		return NULL;

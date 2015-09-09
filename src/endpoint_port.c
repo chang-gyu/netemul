@@ -2,14 +2,14 @@
 #include <string.h>
 #include <malloc.h>
 
-#include "end_port.h"
+#include "endpoint_port.h"
 #include "manager.h"
 #include "composite.h"
 
 extern Port* _port_create();
 
 static void destroy(Node* this) {
-	EndPort* port = (EndPort*)this;
+	EndPointPort* port = (EndPointPort*)this;
 
 	/* Overriding part */
 	port_detach(port->ni);
@@ -32,7 +32,7 @@ static void destroy(Node* this) {
 }
 
 static void send(Component* this, Packet* packet) {
-	EndPort* port = (EndPort*)this;
+	EndPointPort* port = (EndPointPort*)this;
 
 	if(!port->is_active || !port->owner->is_active) {
 		free(packet);
@@ -43,12 +43,12 @@ static void send(Component* this, Packet* packet) {
 	free(packet);
 }
 
-Port* end_port_create() {
-	EndPort* port = (EndPort*)_port_create();
+Port* endpoint_port_create() {
+	EndPointPort* port = (EndPointPort*)_port_create();
 	if(!port)
 		return NULL;
 
-	port = realloc(port, sizeof(EndPort));
+	port = realloc(port, sizeof(EndPointPort));
 	if(!port)
 		goto failed;
 

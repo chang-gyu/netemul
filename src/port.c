@@ -1,7 +1,7 @@
 #include <string.h>
 #include <malloc.h>
 #include "port.h"
-#include "end_port.h"
+#include "endpoint_port.h"
 
 Port* _port_create() {
 	Port* port = malloc(sizeof(Port));
@@ -36,7 +36,7 @@ Port* port_create(int type) {
 			return _port_create();
 		
 		case NODE_TYPE_END_PORT:
-			return end_port_create();
+			return endpoint_port_create();
 
 		default:
 			return NULL;

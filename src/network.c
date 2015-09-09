@@ -8,7 +8,7 @@
 #include "manager.h"
 #include "composite.h"
 
-void network_process(EndPort* port, Packet* packet) {
+void network_process(EndPointPort* port, Packet* packet) {
 	if(!port->is_active || !port->owner->is_active) 
 		goto failed;
 

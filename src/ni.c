@@ -123,7 +123,7 @@ static void tap_destroy(TapInterface* ti) {
 	ti = NULL;
 }
 
-NI* ni_create(EndPort* port) {
+NI* ni_create(EndPointPort* port) {
 	NI* ni = malloc(sizeof(NI));
 	if(!ni)
 		return NULL;

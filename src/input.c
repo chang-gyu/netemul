@@ -42,7 +42,7 @@ static bool input_process(void* context) {
 					packet->end = packet->start + size;
 					
 					// NOTE: fd is same as network interface index.	
-					EndPort* port = manager->nis[fd]->port;
+					EndPointPort* port = manager->nis[fd]->port;
 					network_process(port, packet);
 				}
 			}

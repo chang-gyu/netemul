@@ -48,7 +48,7 @@ bool fd_add(int fd);
 void fd_remove(int fd);
 Manager* get_manager();
 
-NI* port_attach(EndPort* port);
+NI* port_attach(EndPointPort* port);
 void port_detach(NI* ni);
 
 #endif /* __MANAGER_H__ */
