@@ -140,7 +140,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 }
 	
 static int cmd_create(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-	if(!((argc >= 2) || (argc <= 4))) { 
+	if(!((argc >= 2) && (argc <= 4))) { 
 		return CMD_STATUS_WRONG_NUMBER;
 	}
 
@@ -170,6 +170,10 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		printf("New host device '%s' created\n", host->name);
 		cmd_update_var(host->name, 0);
 	} else if((strcmp(argv[1], "-l") == 0) || (strcmp(argv[1], "link") == 0)) {
+		if(argc != 4) {
+			return CMD_STATUS_WRONG_NUMBER;
+		}
+
 		Node* source = get_node(argv[2]);
 		Node* destination = get_node(argv[3]);
 		

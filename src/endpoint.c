@@ -29,11 +29,10 @@ EndPoint* endpoint_create(int port_count, int type) {
 			if(!node_register((Composite*)end, name))
 				break;
 
-
 			for(int j = 0; j < end->node_count; j++) {
 				EndPointPort* port = (EndPointPort*)end->nodes[j];
 
-				if(!(port->ni = port_attach(port)));
+				if(!(port->ni = port_attach(port))) 
 					break;
 			}
 

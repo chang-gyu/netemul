@@ -3,7 +3,7 @@
 #include <malloc.h>
 
 #include <net/ether.h>
-#include <_time.h>
+#include <timer.h>
 
 #include "ether_switch.h"
 #include "switch.h"

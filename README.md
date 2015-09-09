@@ -10,14 +10,14 @@ PacketNgin Network Emaultor depends on PacketNgin RTOS and PacketNgin libraries.
     $ git clone https://github.com/packetngin/rtos os
     $ mv os & make
        
-if you have problem for compiling rtos, visit PacketNgin website and follow install guide in <http://packetngin.org>.
+If you have a problem during compiling OS, please visit PacketNgin website and follow install guide <http://packetngin.org>.
        
 ##Guides and Howtos
 
 #####Download PacketNgin Network Emulator & compile
 
     $ git clone https://github.com/packetngin/netemul
-    $ mv netemul & configure & make
+    $ mv netemul & make
      
     
 #####Execution guide
@@ -143,10 +143,10 @@ Currently, this command is only for setting port of link. Users can use this com
 We provides API lists for developers : [Documentation on the Network Emulator API](http://packetngin.org/assets/doxy/index.html "PacketNgin Emulator API")
 
 ##Contact
-Contact to our company by <contact@gurum.cc>
-Inquiry about development by <youseok@gurum.cc>
-GurunmNetworks <http://gurum.cc>
-PacketNgin OpenSource <http://packetngin.org>
+Contact to our company by <contact@gurum.cc><br>
+Inquiry about development by <youseok@gurum.cc><br>
+GurunmNetworks <http://gurum.cc><br>
+PacketNgin OpenSource <http://packetngin.org><br>
 
 ##Licenses
 PacketNgin Network Emulator is licensed under GPL2
