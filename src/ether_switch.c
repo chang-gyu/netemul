@@ -44,7 +44,7 @@ static void list_table(EtherSwitch* s) {
 		Port* port = (Port*)entity->port;
 
 		uint8_t mac[6];
-		double ageing = ((double)(entity->timeout - time_ms())) / 1000;
+		double ageing = ((double)(entity->timeout - timer_ms())) / 1000;
 		if(ageing < 0)
 			continue;
 
@@ -62,7 +62,7 @@ static bool update_table(Cache* table, Packet* packet, Port* port) {
 	Ether* ether = (Ether*)(packet->buffer + packet->start);
 
 	MACTableEntity* entity = (MACTableEntity*)cache_get(table, (void*)(uint64_t)ether->smac);
-	time_t current = time_ms();
+	time_t current = timer_ms();
 
 	if(!entity) {
 		/* Add new entity */
