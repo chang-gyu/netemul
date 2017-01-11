@@ -1,6 +1,6 @@
 CC			:= gcc
 LD			:= ld
-SDK			:= /home/ys/os/sdk
+SDK			:= $(HOME)/rtos/sdk
 INCLUDES	:= -I. -I$(TOPDIR)/include -I $(SDK)/include 
 DEFINES		:= #-DNET_CONTROL -DDEBUG
 LIBS		:= $(SDK)/../lib/libumpn.a
