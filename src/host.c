@@ -12,7 +12,7 @@
 //			Port* port = (Port*)composite->nodes[i];
 //			if(!port) {
 //				/* Overriding part */
-//				port_detach(port->ni);
+//				port_detach(port->nic);
 //				port->destroy((Node*)port);
 //			}
 //		}

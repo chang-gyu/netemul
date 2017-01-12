@@ -131,20 +131,20 @@ Manager* get_manager() {
 	return manager;
 }
 
-NI* port_attach(EndPointPort* port) {
-	NI* ni = ni_create(port);	
-	if(!ni)
+NIC* port_attach(EndPointPort* port) {
+	NIC* nic = nic_create(port);	
+	if(!nic)
 		return NULL;
 
 	// NOTE: fd is same as network interface index.	
-	int fd = ni->ti->fd;	
-	manager->nis[fd] = ni;
+	int fd = nic->ti->fd;	
+	manager->nics[fd] = nic;
 	port->fd = fd;
 
-	return ni;
+	return nic;
 }
 
-void port_detach(NI* ni) {
-	ni_destroy(ni);
+void port_detach(NIC* nic) {
+	nic_destroy(nic);
 }
 	

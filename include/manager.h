@@ -5,15 +5,15 @@
 #include <util/list.h>
 #include <util/map.h>
 #include "node.h"
-#include "ni.h"
+#include "nic.h"
 #include "port.h"
 
 /**
  * Network emulator manager.
  */
 typedef struct {
-#define MAX_NI_COUNT	1024
-	NI*	nis[MAX_NI_COUNT];
+#define MAX_NIC_COUNT	1024
+	NIC*	nics[MAX_NIC_COUNT];
 
 #define MAX_NODE_COUNT	2048
 	Map*	nodes;			///< All composite of network emulator (Key: name, Value: pointer of node).
@@ -48,7 +48,7 @@ bool fd_add(int fd);
 void fd_remove(int fd);
 Manager* get_manager();
 
-NI* port_attach(EndPointPort* port);
-void port_detach(NI* ni);
+NIC* port_attach(EndPointPort* port);
+void port_detach(NIC* nic);
 
 #endif /* __MANAGER_H__ */

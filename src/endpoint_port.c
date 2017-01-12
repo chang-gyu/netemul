@@ -12,7 +12,7 @@ static void destroy(Node* this) {
 	EndPointPort* port = (EndPointPort*)this;
 
 	/* Overriding part */
-	port_detach(port->ni);
+	port_detach(port->nic);
 
 	Component* src = port->in;
 	Component* dst = port->out;

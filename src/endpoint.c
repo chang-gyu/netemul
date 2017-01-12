@@ -32,7 +32,7 @@ EndPoint* endpoint_create(int port_count, int type) {
 			for(int j = 0; j < end->node_count; j++) {
 				EndPointPort* port = (EndPointPort*)end->nodes[j];
 
-				if(!(port->ni = port_attach(port))) 
+				if(!(port->nic = port_attach(port))) 
 					break;
 			}
 
