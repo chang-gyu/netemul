@@ -25,7 +25,11 @@ void network_process(EndPointPort* port, Packet* packet) {
 	return;
 
 failed:
+#ifdef NETEMUL_PACKETNGIN
+	nic_free(packet);
+#else
 	free(packet);
+#endif
 }
 
 

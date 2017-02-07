@@ -75,6 +75,7 @@ bool switch_broadcast(Port* port, Packet* packet) {
 }
 
 Switch* switch_create(int port_count, int type) {
+	printf("debug1\n");
 	Switch* s;
 	char* name;
 
@@ -84,10 +85,11 @@ Switch* switch_create(int port_count, int type) {
 			if(!(s = ether_switch_create(port_count)))
 				return NULL;
 
+printf("debug\n");
 			name = s->name;
 			name[0] = 's'; // 'Switch'
 			break;
-
+/*
 		case NODE_TYPE_HUB_SWITCH:
 			if(!(s = hub_create(port_count)))
 				return NULL;
@@ -95,7 +97,7 @@ Switch* switch_create(int port_count, int type) {
 			name = s->name;
 			name[0] = 'h'; // 'Hub'
 			break;
-
+*/
 		default:
 			return NULL;
 	}

@@ -12,7 +12,7 @@
 //			Port* port = (Port*)composite->nodes[i];
 //			if(!port) {
 //				/* Overriding part */
-//				port_detach(port->nic);
+//				port_detach(port->ni);
 //				port->destroy((Node*)port);
 //			}
 //		}
@@ -25,7 +25,7 @@
 //	free(composite);
 //	composite = NULL;
 //}
-//
+
 EndPoint* host_create(int port_count) {
 	Host* host = malloc(sizeof(Host));
 	if(!host) 
@@ -46,6 +46,7 @@ EndPoint* host_create(int port_count) {
 	/* Method overriding */
 	// nothing 
 
+	printf("host_create success\n");	//debug message
 	return (EndPoint*)host;
 
 failed:

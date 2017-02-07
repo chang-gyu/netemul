@@ -11,8 +11,10 @@ typedef struct {
 #define MB	1000000
 	uint64_t	bandwidth;	///< Bandwidth for each line (bytes).
 	double		error_rate;	///< Packet error rate. e.g. Packet loss rate (percentage).
+	double		drop_rate;
 	double		jitter;		///< Deviation from periodicity of a presumed value.
 	uint64_t	latency;	///< Latency (micro-seconds)
+	uint64_t	variant;
 } Cable; 
 
 Cable* cable_create(uint64_t bandwidth, double error_rate, double jitter, 

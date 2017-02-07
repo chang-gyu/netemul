@@ -3,15 +3,15 @@
 
 #include "port.h"
 
-struct _NIC;
-typedef struct _NIC NIC;
+struct _NI;
+typedef struct _NI NI;
 
 /* Class EndPointPort extends Port */
 typedef struct {
     Port;
 
     /* Attached NI to this */
-    NIC*         nic;
+    NI*         ni;
     int         fd;
 } EndPointPort;
 

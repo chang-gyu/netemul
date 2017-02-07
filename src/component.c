@@ -2,6 +2,8 @@
 #include <malloc.h>
 #include "composite.h"
 
+#include <net/packet.h>		//for debug
+
 static void destroy(Node* this) {
 	Component* component = (Component*)this;
 
@@ -34,12 +36,14 @@ static void get(Node* this) {
 }
 
 static void send(Component* this, Packet* packet) {
+//	packet_dump(packet);
 	if(!this->is_active || !this->owner->is_active) {
 		printf("Node %s is inactive\n", this->name); 
 		goto failed;
 	}
 
 	if(!this->out) {
+		printf("Node %s has no out way\n", this->name); 
 		goto failed;
 	}
 
@@ -53,8 +57,13 @@ static void send(Component* this, Packet* packet) {
 
 	return;
 
+
 failed:
+#ifdef NETEMUL_PACKETNGIN
+	nic_free(packet);
+#else
 	free(packet);
+#endif
 }
 
 bool component_inherit(Component* component) {

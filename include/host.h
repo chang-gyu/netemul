@@ -2,7 +2,7 @@
 #define __HOST_H__
 
 #include "endpoint.h"
-#include "nic.h"
+#include "ni.h"
 
 /* Class Host extends EndPoint */
 typedef struct { 

@@ -11,7 +11,11 @@
 #include <linux/if_tun.h>
 #include <errno.h>
 
-#include "nic.h"
+#ifdef NETEMUL_PACKETNGIN
+#include <net/nic.h>
+#endif
+
+#include "ni.h"
 #include "manager.h"
 
 static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
@@ -122,40 +126,81 @@ static void tap_destroy(TapInterface* ti) {
 	free(ti);
 	ti = NULL;
 }
+#ifdef NETEMUL_PACKETNGIN
+void ni_init() {
+	Manager* manager = get_manager();
+	manager->nic_count = 0;
 
-NIC* nic_create(EndPointPort* port) {
-	NIC* nic = malloc(sizeof(NIC));
-	if(!nic)
+	for(int i = 0; i < nic_count(); i++) {
+		NI* ni = (NI*)malloc(sizeof(NI));
+		ni->used = 0; // unused == 0.
+		printf("ni->used : %d\n", ni->used);
+		manager->nis[i] = ni; //(NI*)malloc(sizeof(NI));
+	}
+}
+
+static NI* nic_create(const char* name, int index) {
+	Manager* manager = get_manager();
+
+	int i;
+	for(i = 0; i < manager->nic_count; i++) {
+		if(manager->nis[i]->used == 0) {
+			manager->nis[i]->used = 1;
+			//strncpy(manager->nis[i]->nic->name, name, strlen(name));
+			break;
+		}
+	}
+
+	return manager->nis[i];
+}
+#endif
+
+NI* ni_create(EndPointPort* port) {
+#ifdef NETEMUL_PACKETNGIN
+	printf("port name : %s\n", port->name);
+	NI* ni = nic_create(port->name, 1);
+	ni->port = port;
+
+	return ni;
+
+#else
+	NI* ni = malloc(sizeof(NI));
+	if(!ni)
 		return NULL;
 
 	TapInterface* ti = tap_create(port->name, IFF_TAP | IFF_NO_PI);
 	if(!ti) 
 		goto failed;
 
-	nic->ti = ti;
-	nic->port = port;
+	ni->ti = ti;
+	ni->port = port;
 
 	if(!fd_add(ti->fd))
 		goto failed;
 
-	return nic;
+	return ni;
 
 failed:
 	if(ti)
 		tap_destroy(ti);
 
-	if(nic) {
-		free(nic);
-		nic = NULL;
+	if(ni) {
+		free(ni);
+		ni = NULL;
 	}
-
 	return NULL;
+#endif
 }
 
-void nic_destroy(NIC* nic) {
-	fd_remove(nic->ti->fd);
-	tap_destroy(nic->ti);
-	free(nic);
-	nic = NULL;
+void ni_destroy(NI* ni) {
+#ifdef NETEMUL_PACKETNGIN
+	ni->used = 0;
+	ni->nic = NULL;
+#else
+	fd_remove(ni->ti->fd);
+	tap_destroy(ni->ti);
+	free(ni);
+	ni = NULL;
+#endif
 }
 

@@ -11,6 +11,7 @@
 #include "composite.h"
 #include "input.h"
 #include "network.h"
+#include "ni.h"
 
 static Manager* manager;
 
@@ -24,15 +25,21 @@ bool manager_init() {
 	/* Event machine init */
 	event_init();
 
+#ifdef NETEMUL_PACKETNGIN
+	/* for packetngin nic init */
+	ni_init();
+
+#else
 	/* External interface preparation */
 	manager->fds = list_create(NULL);
 	if(!manager->fds)
 		return false;
+#endif
 
 	cmd_init();
 	input_init();
 
-	/* Internal emulation prepartion */
+//	 Internal emulation prepartion
 	manager->nodes = map_create(MAX_NODE_COUNT, map_string_hash, map_string_equals, NULL);
 	if(!manager->nodes)
 		return false;
@@ -46,9 +53,20 @@ bool manager_init() {
 	return true;
 }
 
+#ifdef NETEMUL_PACKETNGIN
+static char* str[] = { ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", 
+					   ".8", ".9", ".10", ".11", ".12", ".13", ".14", ".15" };
+#endif
+
 bool node_register(Composite* node, char* name) {
 	for(int i = 0; i < node->node_count; i++) {
+#ifdef NETEMUL_PACKETNGIN
+		int len = strlen(name);
+		strncpy(node->nodes[i]->name, name, 2);
+		strncpy(node->nodes[i]->name + len, str[i], 3);
+#else
 		sprintf(node->nodes[i]->name, "%s.%d", node->name, i);
+#endif
 		if(!list_add(manager->components, node->nodes[i]))
 			return false;
 	}
@@ -71,7 +89,7 @@ Node* get_node(char* name) {
 	char* index_str = strtok(NULL, ".");
 
 	/* Component node get */
-	if(index_str) {
+	if(index_str) {			
 		if(!is_uint8(index_str)) {
 			printf("Port index must be number\n");
 			return NULL;
@@ -89,7 +107,7 @@ Node* get_node(char* name) {
 		
 		return (Node*)composite->nodes[index];
 	/* Composite node get */
-	} else {
+	} else {				
 		return (Node*)map_get(manager->nodes, temp);
 	}
 }
@@ -131,20 +149,40 @@ Manager* get_manager() {
 	return manager;
 }
 
-NIC* port_attach(EndPointPort* port) {
-	NIC* nic = nic_create(port);	
-	if(!nic)
+NI* port_attach(EndPointPort* port) {
+#ifdef NETEMUL_PACKETNGIN
+	//for PakcetNgin
+	NI* ni = NULL;
+	for(int i = 0; i < nic_count(); i++) {
+		ni = manager->nis[i];
+		if(ni->used == 0) {
+			port->fd = i;
+			ni->nic = nic_get(i);
+			ni->used = 1;
+			ni->port = port;
+			break;
+		}
+	}
+#else
+	NI* ni = ni_create(port);	
+	if(!ni)
 		return NULL;
 
 	// NOTE: fd is same as network interface index.	
-	int fd = nic->ti->fd;	
-	manager->nics[fd] = nic;
+	int fd = ni->ti->fd;	
+	manager->nis[fd] = ni;
 	port->fd = fd;
-
-	return nic;
+#endif 	
+	return ni;
 }
 
-void port_detach(NIC* nic) {
-	nic_destroy(nic);
+void port_detach(NI* ni) {
+#ifdef NETEMUL_PACKETNGIN
+	//for PacketNgin
+	ni->used = 0;
+	ni->nic = NULL;
+#else
+	ni_destroy(ni);
+#endif
 }
 	

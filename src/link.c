@@ -18,6 +18,18 @@ static void get(Node* this) {
 			cable->owner->name, (dst != NULL)? dst->name: "NULL");
 }
 
+static bool set(Node* this, int argc, char** argv) {	//set l0 latency: 10
+	Link* link = (Link*)this;
+
+	Cable* cable = (Cable*)link->nodes[0];
+	if(!cable->set((Node*)cable, argc, argv))
+		return false;
+
+	cable = (Cable*)link->nodes[1];
+	if(!cable->set((Node*)cable, argc, argv))
+		return false;
+	return true;
+}
 /**
  * Find out node is available for connecting.
  * 
@@ -95,6 +107,7 @@ static Link* _link_create(Node* source, Node* destination) {
 	
 	/* Method overriding */
 	link->get = get;
+	link->set = set;
 
 	return link;
 
@@ -115,12 +128,20 @@ Link* link_create(Node* source, Node* destination) {
 
 	/* Register link to network emulator manager */
 	bool result = false;
+
 	for(int i = 0; i < MAX_NODE_COUNT; i++) {
+#ifdef NETEMUL_PACKETNGIN
+		static char st = '0';
+		strcpy(&name[1], &st);		
+		st =+ 1;
+#else
 		sprintf(&name[1], "%d", i);
-		
+#endif
+
 		if(!get_node(name)) {
 			result = node_register((Composite*)link, name);
 			break;
+
 		}
 	}
 
