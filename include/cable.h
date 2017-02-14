@@ -9,7 +9,9 @@ typedef struct {
 
 	/* Cable property */
 #define MB	1000000
-	uint64_t	bandwidth;	///< Bandwidth for each line (bytes).
+#define BIT	8
+	uint64_t	bandwidth;	///< Bandwidth for each line (bps).
+	uint64_t	output_closed;///< Total size.
 	double		error_rate;	///< Packet error rate. e.g. Packet loss rate (percentage).
 	double		drop_rate;
 	double		jitter;		///< Deviation from periodicity of a presumed value.

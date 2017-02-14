@@ -1,3 +1,5 @@
+#include <stdlib.h>		//for rand.
+#include <time.h>
 #include <string.h>
 #include <malloc.h>
 
@@ -11,6 +13,10 @@
 #include "node.h"
 #include "component.h"
 #include "cable.h"
+
+#include <net/packet.h>			//debug
+
+#include <unistd.h>			//debug
 
 bool set(Node* this, int argc, char** argv) {
 	Cable* cable = (Cable*)this;
@@ -92,22 +98,26 @@ static bool _latency(void* context) {
 	return false;
 }
 
-
 static void send(Component* this, Packet* packet) {
-	/*
-	if(!this->is_active || !this->owner->is_active) {
-	printf("Node %s is inactive\n", this->name); // check that this node.
-	goto failed;
-	}   
-	if(!this->out) {
-		printf("Node %s has no out way\n", this->name);
-		goto failed;
-	}   
-	*/
-
 	Cable* cable = (Cable*)this;
 
 	/* Bandwidth */	
+	struct timespec tspec;
+	clock_gettime(CLOCK_REALTIME, &tspec);
+	uint64_t time = (uint64_t)tspec.tv_sec * 1000000 + tspec.tv_nsec / 1000; //ms
+
+	if(cable->output_closed - (1000000 / 1000)/*grace*/ > time) {
+		goto failed;
+	}
+
+	Ether* ether = (Ether*)packet->buffer;
+	IP* ip = (IP*)ether->payload;
+	size_t size = (sizeof(Ether) + endian16(ip->length));
+	
+	if(cable->output_closed > time)
+		cable->output_closed += (long double)1000000 * 8 / cable->bandwidth * size;
+	else
+		cable->output_closed = time + (long double)1000000 * 8 / cable->bandwidth/*output_wait*/ * size;
 
 	/* Error rate */
 	if(cable->error_rate != 0) {
@@ -116,7 +126,7 @@ static void send(Component* this, Packet* packet) {
 			IP* ip = (IP*)ether->payload;
 			uint16_t ip_body_size = ip->length - ip->ihl * 4;
 			uint32_t index = timer_frequency() % ip_body_size;
-			
+
 			uint8_t *body;
 			body = ((uint8_t*)ip + ip->ihl * 4);
 
@@ -126,46 +136,49 @@ static void send(Component* this, Packet* packet) {
 				temp *= 2;
 
 			temp = temp ^ body[index];
-//			printf("before body[%d]: %02x\n", index, body[index]);
 			body[index] = temp;
-//			printf("after body[%d]: %02x\n", index, body[index]);
 		}
 	}
 
 	/* Drop rate */
 	if(cable->drop_rate != 0) {
-		//	if(drop_cnt <= 0.10 * 100)		//test
 		if(timer_frequency() % 100 <= cable->drop_rate)
 			goto failed;
 	}
 
 	/* Latency(Variant) */
+	if(cable->latency == 0 && cable->variant == 0) {
+		this->out->send(this->out, packet);
+		return;
+	}
+
 	Cable_Context* context = (Cable_Context*)malloc(sizeof(Cable_Context));
 	context->cable = cable;
 	context->packet = packet;
-	
+	static bool flag = true;
+
+
 	uint64_t rate_cnt = 0;
 	if(cable->variant != 0)
-		rate_cnt = timer_frequency() % cable->variant * 2;
-	uint64_t delay = 0;
-	if(cable->latency > rate_cnt)
-		delay = (timer_frequency() % 2 ? cable->latency - rate_cnt : cable->latency + rate_cnt);
-	else {
-		delay = (timer_frequency() % 2 ? cable->latency - rate_cnt : cable->latency + rate_cnt);
-		if(delay > cable->latency + cable->variant)
-			delay = 0;
-	}
+		rate_cnt = rand() % (cable->variant * 5);
 
-	printf("delay : %lu\n", delay);
+	uint64_t delay = 0;
+	if(flag == true) {
+		delay = cable->latency - rate_cnt;
+		if(delay > cable->latency + rate_cnt) //overflow
+			delay = 0;
+		flag = false;
+	}
+	else {
+		delay = cable->latency + rate_cnt;
+		flag = true;
+	}
 	event_timer_add(_latency, context, delay, 0);
+
 	return;
 
 failed:
-#ifdef NETEMUL_PACKETNGIN
-	nic_free(packet);
-#else
-	free(packet);
-#endif
+	free_func(packet);
 }
 
 Cable* cable_create(uint64_t bandwidth, double error_rate, double jitter, 
@@ -183,6 +196,10 @@ Cable* cable_create(uint64_t bandwidth, double error_rate, double jitter,
 		goto failed;
 
 	/* Extends */
+	struct timespec tspec;
+	clock_gettime(CLOCK_REALTIME, &tspec);
+
+	cable->output_closed = tspec.tv_sec * 1000000 + tspec.tv_nsec / 1000;
 	cable->bandwidth = bandwidth;
 	cable->error_rate = error_rate;
 	cable->jitter = jitter;
