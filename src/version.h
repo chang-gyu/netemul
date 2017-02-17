@@ -4,7 +4,7 @@
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   9
 #define VERSION_MICRO   4
-#define VERSION_TAG	"0a5cc58"
+#define VERSION_TAG	"188caf9"
 
 #define VERSION         ((VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | (VERSION_MICRO))
 

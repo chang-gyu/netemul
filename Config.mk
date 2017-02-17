@@ -1,11 +1,11 @@
 CC			:= gcc
-LD			:= ld
+LD			:= ld 
 SDK			:= $(HOME)/rtos/
 INCLUDES	:= -I. -I$(TOPDIR)/include -I $(SDK)/include 
-DEFINES		:= -DNET_CONTROL -DDEBUG -D__LINUX
+DEFINES		:= -DNET_CONTROL -D__LINUX #-DDEBUG
 LIBS		:= $(SDK)/lib/libumpn.a
 WARNING		:= -Wall -Werror -Wno-unused-result -Wno-unused-function
-CFLAGS		:= $(WARNING) -nostdlib -std=gnu99 -fms-extensions $(INCLUDES) $(DEFINES) $(LIBS)
+CFLAGS		:= $(WARNING) -std=gnu99 -fms-extensions $(INCLUDES) $(DEFINES) $(LIBS)
 
 .SUFFIXES : .o .c .S
 

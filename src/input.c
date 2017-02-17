@@ -83,7 +83,6 @@ static bool cli_process(void* context) {
 	else {
 		int len = strlen(name);
 		if(len > 0) {
-//			printf("command input : %s\n", name);
 			cmd_exec(name, NULL);
 			fflush(stdout);
 		}
@@ -100,7 +99,6 @@ bool input_init() {
 #else
 	event_busy_add(cli_process, NULL);
 #endif
-
 	event_busy_add(input_process, NULL);
 
 	return true;

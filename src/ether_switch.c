@@ -93,6 +93,7 @@ static bool update_table(Cache* table, Packet* packet, Port* port) {
 				}
 			}
 		}
+		entity->port = port;	//If port is changed, renew port.
 	}
 	
 	return true;
@@ -157,6 +158,7 @@ static void ether_switch_send(Component* this, Packet* packet) {
 	return;
 	
 failed:
+	//TODO: packetngin nic_free apply.
 	free(packet);
 }
 

@@ -1,12 +1,13 @@
-#include <stdlib.h>		//for rand.
-#include <time.h>
-#include <string.h>
-#include <malloc.h>
+#include <stdlib.h>		// For strtod, rand
+#include <string.h>		// For strcmp, memset
+#include <math.h>		// For stdev(sqrt, log, cos, sin)
+#include <values.h>		// For stdev(DBL_MIN)
+
+#include <malloc.h>		// For printf 
 
 #include <timer.h>
 #include <util/types.h>
 #include <util/event.h>
-#include <net/nic.h>
 #include <net/ether.h>
 #include <net/ip.h>
 
@@ -14,12 +15,10 @@
 #include "component.h"
 #include "cable.h"
 
-#include <net/packet.h>			//debug
-
-#include <unistd.h>			//debug
-
 bool set(Node* this, int argc, char** argv) {
 	Cable* cable = (Cable*)this;
+	char* flag = NULL;
+	double temp;
 	for(int i = 0; i < argc; i++) {
 		if(strcmp(argv[i], "band:") == 0) {
 			i++;
@@ -30,25 +29,31 @@ bool set(Node* this, int argc, char** argv) {
 			cable->bandwidth = parse_uint64(argv[i]);
 		} else if(strcmp(argv[i], "error:") == 0) {
 			i++;
-			if(!is_uint16(argv[i])) {
+			flag = NULL;
+			temp = strtod(argv[i], &flag);
+			if(flag[0] != '\0') {
 				printf("Error rate must be double\n");
 				return false;
 			}
-			cable->error_rate = parse_uint16(argv[i]);
+			cable->error_rate = temp;
 		} else if(strcmp(argv[i], "drop:") == 0) {
 			i++;
-			if(!is_uint16(argv[i])) {
+			flag = NULL;
+			temp = strtod(argv[i], &flag);
+			if(flag[0] != '\0') {
 				printf("Error rate must be double\n");
 				return false;
 			}
-			cable->drop_rate = parse_uint16(argv[i]);
+			cable->drop_rate = temp;
 		} else if(strcmp(argv[i], "jitter:") == 0) {
 			i++;
-			if(!is_uint16(argv[i])) {
+			flag = NULL;
+			temp = strtod(argv[i], &flag);
+			if(flag[0] != '\0') {
 				printf("Jitter must be uint16\n");
 				return false;
 			}
-			cable->jitter = parse_uint16(argv[i]);
+			cable->jitter = temp;
 		} else if(strcmp(argv[i], "latency:") == 0) {
 			i++;
 			if(!is_uint64(argv[i])) {
@@ -98,6 +103,32 @@ static bool _latency(void* context) {
 	return false;
 }
 
+double generateGaussianNoise(double average, double stdev) {
+#define EPSILON	DBL_MIN
+#define TWO_PI	(2.0 * 3.14159265358979323846)
+
+	static double z1;
+	static int generate = 0;
+
+	double z0;
+
+	generate = !generate;
+
+	if(!generate)
+		return average + z1 * stdev;
+
+	double u1, u2;
+	do {
+		u1 = rand() * (1.0 / RAND_MAX);
+		u2 = rand() * (1.0 / RAND_MAX);
+	} while(u1 <= EPSILON);
+
+	z0 = sqrt(-2.0 * log(u1)) * cos(TWO_PI * u2);
+	z1 = sqrt(-2.0 * log(u1)) * sin(TWO_PI * u2);
+
+	return average + z0 * stdev;
+}
+
 static void send(Component* this, Packet* packet) {
 	Cable* cable = (Cable*)this;
 
@@ -113,7 +144,7 @@ static void send(Component* this, Packet* packet) {
 	Ether* ether = (Ether*)packet->buffer;
 	IP* ip = (IP*)ether->payload;
 	size_t size = (sizeof(Ether) + endian16(ip->length));
-	
+
 	if(cable->output_closed > time)
 		cable->output_closed += (long double)1000000 * 8 / cable->bandwidth * size;
 	else
@@ -146,34 +177,32 @@ static void send(Component* this, Packet* packet) {
 			goto failed;
 	}
 
-	/* Latency(Variant) */
+	/* Latency & Variant */
+	double delay = cable->latency;
+
 	if(cable->latency == 0 && cable->variant == 0) {
 		this->out->send(this->out, packet);
 		return;
+	} else if(cable->latency >= 100) {
+		delay -= 120;
 	}
+		
 
 	Cable_Context* context = (Cable_Context*)malloc(sizeof(Cable_Context));
 	context->cable = cable;
 	context->packet = packet;
-	static bool flag = true;
 
+	// Variant 
+	if(cable->variant != 0) 
+		delay = generateGaussianNoise(delay, (double)cable->variant);
 
-	uint64_t rate_cnt = 0;
-	if(cable->variant != 0)
-		rate_cnt = rand() % (cable->variant * 5);
+	uint64_t final;
+	if(delay <= 0)	
+		final = 0;
+	else
+		final = (uint64_t)delay;
 
-	uint64_t delay = 0;
-	if(flag == true) {
-		delay = cable->latency - rate_cnt;
-		if(delay > cable->latency + rate_cnt) //overflow
-			delay = 0;
-		flag = false;
-	}
-	else {
-		delay = cable->latency + rate_cnt;
-		flag = true;
-	}
-	event_timer_add(_latency, context, delay, 0);
+	event_timer_add(_latency, context, final, 0);
 
 	return;
 

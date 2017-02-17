@@ -183,7 +183,6 @@ failed:
 	}
 	return NULL;
 #else
-	printf("port name : %s\n", port->name);
 	NI* ni = nic_create(port->name, 1);
 	ni->port = port;
 

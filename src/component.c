@@ -2,8 +2,6 @@
 #include <malloc.h>
 #include "composite.h"
 
-#include <net/packet.h>		//for debug
-
 #ifdef __LINUX
 void (*free_func)(void*) = free;
 #else
@@ -42,7 +40,6 @@ static void get(Node* this) {
 }
 
 static void send(Component* this, Packet* packet) {
-//	packet_dump(packet);
 	if(!this->is_active || !this->owner->is_active) {
 		printf("Node %s is inactive\n", this->name); 
 		goto failed;

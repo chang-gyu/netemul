@@ -2,12 +2,9 @@
 #include <string.h>
 #include <malloc.h>
 
-#include <net/packet.h>
 #include "endpoint_port.h"
 #include "manager.h"
 #include "composite.h"
-
-//#include "dump.h" //debug
 
 extern Port* _port_create();
 
@@ -47,12 +44,8 @@ static void send(Component* this, Packet* packet) {
 	free_func(packet);
 #else
 	NIC* nic = port->ni->nic;
-//	printf("nic : %p\n", nic);
-//	packet_dump(packet);
-	if(!nic_output(nic, packet)) {
-//		printf("nic error\n");
+	if(!nic_output(nic, packet)) 
 		free_func(packet);
-	}
 #endif
 
 	return;

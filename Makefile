@@ -2,12 +2,12 @@
 
 TARGET	:= netemul
 TOPDIR	:= $(shell /bin/pwd)
-SUBDIRS	:= src
+SUBDIRS	:= src 
 
 include $(TOPDIR)/Config.mk
 
 all : compile $(OBJS)
-	$(CC) $(OBJS) $(addsuffix /built-in.o, $(SUBDIRS)) -o $(TARGET)
+	$(CC) $(OBJS) $(addsuffix /built-in.o, $(SUBDIRS)) -o $(TARGET) -lm
 
 include $(TOPDIR)/Rules.mk
 

@@ -208,7 +208,6 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 				return -1;
 			}
 		}
-	printf("in cmd_create\n");
 
 		Switch* s = switch_create(port_count, NODE_TYPE_ETHER_SWITCH);
 		if(!s) {
@@ -217,31 +216,30 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		}
 
 		printf("New switch '%s' created\n", s->name);
-//	} else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "hub") == 0)) {
-//		int port_count = DEFAULT_SWITCH_PORT_COUNT;
-//
-//		if(argc == 3) {
-//			if(!is_uint32(argv[2])) {
-//				printf("Port count must to be number\n");
-//				return -1;
-//			}
-//			
-//			port_count = parse_uint32(argv[2]);
-//			if(port_count > MAX_COMPONENT_COUNT) {
-//				printf("Cannot make too many ports '%d'\n", port_count);
-//				return -1;
-//			}
-//		}
-//	
-//		Switch* s = switch_create(port_count, NODE_TYPE_HUB_SWITCH);
-//		if(!s) {
-//			printf("Hub create failed\n");
-//			return -1;
-//		} 
-//
-//		printf("New switch '%s' created\n", s->name);
+	} else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "hub") == 0)) {
+		int port_count = DEFAULT_SWITCH_PORT_COUNT;
+
+		if(argc == 3) {
+			if(!is_uint32(argv[2])) {
+				printf("Port count must to be number\n");
+				return -1;
+			}
+			
+			port_count = parse_uint32(argv[2]);
+			if(port_count > MAX_COMPONENT_COUNT) {
+				printf("Cannot make too many ports '%d'\n", port_count);
+				return -1;
+			}
+		}
+	
+		Switch* s = switch_create(port_count, NODE_TYPE_HUB_SWITCH);
+		if(!s) {
+			printf("Hub create failed\n");
+			return -1;
+		} 
+
+		printf("New switch '%s' created\n", s->name);
 	} else {
-		//usage(argv[0]);
 		return CMD_STATUS_NOT_FOUND;
 	}
  

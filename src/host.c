@@ -46,7 +46,6 @@ EndPoint* host_create(int port_count) {
 	/* Method overriding */
 	// nothing 
 
-	//printf("host_create success\n");	//debug message
 	return (EndPoint*)host;
 
 failed:
