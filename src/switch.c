@@ -93,7 +93,7 @@ Switch* switch_create(int port_count, int type) {
 				return NULL;
 
 			name = s->name;
-			name[0] = 'h'; // 'Hub'
+			name[0] = 'b'; // 'Hub'
 			break;
 		default:
 			return NULL;

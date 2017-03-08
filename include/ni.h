@@ -34,6 +34,7 @@ void ni_init();
 #endif
 
 NI* ni_create(EndPointPort* port);
+//NI* ni_attach(EndPointPort* port);
 void ni_destroy(NI* ni);
 
 #endif /* __NI_H__*/ 

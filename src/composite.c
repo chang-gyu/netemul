@@ -69,6 +69,15 @@ bool composite_inherit(Composite* composite) {
 	memset(composite->nodes, 0x0, sizeof(Node*) * composite->node_count);
 
 	switch(composite->type) {
+		case NODE_TYPE_BRIDGE:
+			/*
+			composite->nodes[i] = (Composite*)port_create(NODE_TYPE_END_PORT);
+			if(composite->nodes[i])
+				return false;
+
+			composite->nodes[i]->owner = composite;
+			break;
+			*/
 		case NODE_TYPE_HOST:
 			for(int i = 0; i < composite->node_count; i++) {
 				composite->nodes[i] = (Component*)port_create(NODE_TYPE_END_PORT);

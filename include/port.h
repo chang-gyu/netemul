@@ -3,8 +3,8 @@
 
 #include "component.h"
 
-#define DEFAULT_HOST_PORT_COUNT		1
-#define DEFAULT_SWITCH_PORT_COUNT	4
+#define DEFAULT_HOST_PORT_COUNT		4
+#define DEFAULT_SWITCH_PORT_COUNT	16
 
 /* Class Port extends Componenet */
 typedef struct {

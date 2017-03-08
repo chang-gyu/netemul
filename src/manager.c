@@ -24,7 +24,6 @@ bool manager_init() {
 
 	/* Event machine init */
 	event_init();
-
 #ifdef __LINUX
 	/* External interface preparation */
 	manager->fds = list_create(NULL);
@@ -150,7 +149,8 @@ Manager* get_manager() {
 
 NI* port_attach(EndPointPort* port) {
 #ifdef __LINUX
-	NI* ni = ni_create(port);	
+	NI* ni = NULL;
+	ni = ni_create(port);
 	if(!ni)
 		return NULL;
 
@@ -158,6 +158,7 @@ NI* port_attach(EndPointPort* port) {
 	int fd = ni->ti->fd;	
 	manager->nis[fd] = ni;
 	port->fd = fd;
+
 #else
 	NI* ni = NULL;
 	for(int i = 0; i < nic_count(); i++) {
@@ -182,4 +183,4 @@ void port_detach(NI* ni) {
 	ni->nic = NULL;
 #endif
 }
-	
+
