@@ -3,8 +3,6 @@
 #include <malloc.h>
 
 #include <net/packet.h>
-//#include <net/ether.h>
-//#include <net/ip.h>
 #include <util/event.h>
 
 #include "port.h"
@@ -18,20 +16,7 @@ void network_process(EndPointPort* port, Packet* packet) {
 
 	if(!port->out) 
 		goto failed;
-/*
-	Ether* ether = (Ether*)(packet->buffer + packet->start);
-
-	if(endian16(ether->type) == ETHER_TYPE_IPv4) {
-		IP* ip = (IP*)ether->payload;
-
-		if(ip->protocol == IP_PROTOCOL_ICMP) {
-			if(!strcmp("p0.0", port->name)) {
-				printf("port: %s debug: %d\n", port->name, debug++);
-				packet_dump(packet);
-			}
-		}
-	}
-*/
+	
 #ifdef NET_CONTROL
 	if(!fifo_push(port->out->queue, packet)) 
 		goto failed;

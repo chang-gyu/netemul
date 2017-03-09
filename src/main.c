@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 		{ 0 }
 	};
 
-	char* script = "sc";
+	char* script = "sc"; // NULL;
 	int opt;
 
 	while((opt = getopt_long(argc, argv, "hvs:", options, NULL)) != -1) {

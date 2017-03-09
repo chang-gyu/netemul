@@ -16,6 +16,7 @@
 #include "tree.h"
 
 static List* bridgelist;
+// Ctrl + C -> needs event handler.
 
 static void usage(const char* cmd) {
 	printf("\nUsage :\n");
@@ -110,12 +111,12 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 	
 	if(argc == 2) {
-		if((strcmp(argv[1], "-i") == 0) || (strcmp(argv[1], "bridge") == 0)) {
+		if((strcmp(argv[1], "-b") == 0) || (strcmp(argv[1], "bridge") == 0)) {
 			label("Network bridges");
 			if(!list(NODE_TYPE_BRIDGE))
 				return -1;
 
-		} else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "host") == 0)) {
+		} else if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
 			label("Endpoint Devices");
 			if(!list(NODE_TYPE_HOST))
 				return -1;
@@ -168,7 +169,7 @@ typedef struct {
 	Node* node;
 	bool exsisted;
 	int children;
-	int pipe;		// head bridge: 0(-+-), head: 1(---), tail: 2( \-), bridge: 3( +-)
+	int pipe;		// head head bridge: 0(-+-), head: 1(---), tail: 2( \-), middle bridge: 3( +-)
 } Pixel;
 #define ROW 28
 #define COLUMN  28
@@ -442,7 +443,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		system(command);
 
 		printf("New network bridge'%s' created.\n", bridge->name);
-	} else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "host") == 0)) {
+	} else if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
 		int port_count = DEFAULT_HOST_PORT_COUNT;   //  default value : 1
 
 		if(argc == 3) {
@@ -514,7 +515,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		}
 
 		printf("New switch '%s' created\n", s->name);
-	} else if((strcmp(argv[1], "-b") == 0) || (strcmp(argv[1], "hub") == 0)) {
+	} else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "hub") == 0)) {
 		int port_count = DEFAULT_SWITCH_PORT_COUNT;
 
 		if(argc == 3) {

@@ -20,7 +20,7 @@ EndPoint* endpoint_create(int port_count, int type) {
 				return NULL;
 
 			name = end->name;
-			name[0] = 'h'; // 'hc'
+			name[0] = 'p'; // 'hc'
 			break;
 		case NODE_TYPE_BRIDGE:
 			if(!(end = bridge_create()))  
