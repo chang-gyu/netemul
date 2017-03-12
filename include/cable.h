@@ -3,6 +3,14 @@
 
 #include "component.h"
 
+typedef enum {
+	QOS_TYPE_BANDWIDTH,
+	QOS_TYPE_ERROR_RATE,
+	QOS_TYPE_DROP_RATE,
+	QOS_TYPE_LATENCY,
+	QOS_TYPE_VARIANT,
+} QosType;
+	
 /* Class Cable extends Componenet */
 typedef struct {
 	Component;
