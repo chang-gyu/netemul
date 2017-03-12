@@ -8,4 +8,3 @@ clean :
 		make -C $$dir clean;		\
 		done
 		rm -rf *.o *.i *.s $(TARGET)
-

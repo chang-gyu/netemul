@@ -9,6 +9,9 @@ TARGET	:= built-in.o
 SUBDIRS := 
 OBJS	:= $(patsubst %.c, %.o, $(wildcard *.c))
 
+librpc/librpc_netemul.a:
+	make -C ../librpc
+
 all : version.h compile $(OBJS)
 	$(LD) -r $(addsuffix /$(TARGET), $(SUBDIRS)) $(OBJS) $(LIBS) -o $(TARGET)
 

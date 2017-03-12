@@ -6,9 +6,8 @@ PacketNgin Network Emaultor depends on PacketNgin RTOS and PacketNgin libraries.
 
 ##### Download PacketNgin RTOS & compile
 
-    $ mv /your/home/
-    $ git clone https://github.com/packetngin/rtos os
-    $ mv os & make
+    $ git clone https://github.com/packetngin/rtos
+    
        
 If you have a problem during compiling OS, please visit PacketNgin website and follow install guide <http://packetngin.org>.
        
