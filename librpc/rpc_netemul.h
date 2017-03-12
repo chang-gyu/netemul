@@ -83,11 +83,11 @@ struct _RPC_NetEmulator {
 
 // Client side APIs
 #ifdef LINUX
-RPC_NetEmulator* rpc_open(const char* host, int port, int timeout);
-void rpc_close(RPC_NetEmulator* rpc);
-RPC_NetEmulator* rpc_listen(int port);
-RPC_NetEmulator* rpc_accept(RPC_NetEmulator* rpc);
-bool rpc_is_closed(RPC_NetEmulator* rpc);
+RPC_NetEmulator* rpc_netemul_open(const char* host, int port, int timeout);
+void rpc_netemul_close(RPC_NetEmulator* rpc);
+RPC_NetEmulator* rpc_netemul_listen(int port);
+RPC_NetEmulator* rpc_netemul_accept(RPC_NetEmulator* rpc);
+bool rpc_netemul_is_closed(RPC_NetEmulator* rpc);
 #endif /* LINUX */
 
 int rpc_hello(RPC_NetEmulator* rpc, bool(*callback)(void* context), void* context);
@@ -101,10 +101,6 @@ void rpc_on_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, c
 void rpc_list_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context);
 void rpc_create_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, CreateSpec* spec, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context);
 
-bool rpc_is_active(RPC_NetEmulator* rpc);
-bool rpc_loop(RPC_NetEmulator* rpc);
-
-// Utility
-void rpc_vm_dump(VMSpec* vm);
+bool rpc_netemul_loop(RPC_NetEmulator* rpc);
  
 #endif /* __CONTROL_RPC_NETEMUL_ */
