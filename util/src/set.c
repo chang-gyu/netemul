@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
 	bool callback(bool result, void* context) {
 		//TODO check result
-		printf("On %s\n", result ? "Success" : "Fail");
+		printf("Set %s\n", result ? "Success" : "Fail");
 		rpc_netemul_close(rpc);
 		exit(0);
 		return true;
