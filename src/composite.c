@@ -33,27 +33,27 @@ static bool set(Node* this, int argc, char** argv) {
 	return false;
 }
 
-static void get(Node* this) {
+static void get(Node* this, FILE* fp) {
 	Composite* composite = (Composite*)this;
 
-	printf("\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
-	printf("\t\t-------------------------------\n");
-	printf("\t\t");
+	fprintf(fp, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
+	fprintf(fp, "\t\t-------------------------------\n");
+	fprintf(fp, "\t\t");
 	for(int i = 0; i < composite->node_count; i++) {
-		printf("[%02d] ", i);
+		fprintf(fp, "[%02d] ", i);
 	}
-	printf("\n");
+	fprintf(fp, "\n");
 
-	printf("\t\t");
+	fprintf(fp, "\t\t");
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
 		if(component->out) 
-			printf(" %-4s", component->out->owner->name);
+			fprintf(fp, " %-4s", component->out->owner->name);
 		else
-			printf(" --  ");
+			fprintf(fp, " --  ");
 	}
-	printf("\n\n");
+	fprintf(fp, "\n\n");
 }
 
 bool composite_inherit(Composite* composite) {

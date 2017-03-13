@@ -5,16 +5,16 @@
 #include "link.h"
 #include "manager.h"
 
-static void get(Node* this) {
+static void get(Node* this, FILE* fp) {
 	Link* link = (Link*)this;
 
 	Cable* cable = (Cable*)link->nodes[0];
 	Component* src = cable->in;
 	Component* dst = cable->out;
 
-	printf("\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/"); 
-	printf("\t\t-------------------------------\n");
-	printf("\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
+	fprintf(fp, "\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/"); 
+	fprintf(fp, "\t\t-------------------------------\n");
+	fprintf(fp, "\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
 			cable->owner->name, (dst != NULL)? dst->name: "NULL");
 }
 

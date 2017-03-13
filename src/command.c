@@ -14,8 +14,9 @@
 #include "endpoint.h"
 #include "host.h"
 #include "tree.h"
+#include "sketch.h"
 
-static List* bridgelist;
+List* bridgelist;
 // Ctrl + C -> needs event handler.
 
 static void usage(const char* cmd) {
@@ -55,7 +56,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 			while(list_iterator_has_next(&iter)) {
 				Node* node = list_iterator_next(&iter);
-				node->get(node);
+				node->get(node, stdout);
 			}
 			printf("\n");
 		}
@@ -165,151 +166,6 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 	return 0;
 }
 
-typedef struct {
-	Node* node;
-	bool exsisted;
-	int children;
-	int pipe;		// head head bridge: 0(-+-), head: 1(---), tail: 2( \-), middle bridge: 3( +-)
-} Pixel;
-#define ROW 28
-#define COLUMN  28
-
-static Pixel canvas[ROW][COLUMN];
-static int row;
-static int column;
-
-int sketch(TreeNode* node, int level, int sequence) {
-	canvas[sequence][level].node = (Node*)node->self;
-	canvas[sequence][level].exsisted = true;
-	if(node->count > 0)
-		canvas[sequence][level].children = node->count;
-	else
-		canvas[sequence][level].children = node->count;
-
-	TreeNode* parent = node->parent;
-	if(parent != NULL) {
-		if(parent->count == 1) 
-			canvas[sequence][level].pipe = 1;
-		else {
-			canvas[sequence][level].pipe = 3;
-			if(canvas[sequence][level].node == (Node*)parent->children[parent->count - 1]->self)
-				canvas[sequence][level].pipe = 2;
-			else if(canvas[sequence][level].node == (Node*)parent->children[0]->self)
-				canvas[sequence][level].pipe = 0;
-		}
-	} 
-
-	int sibling = 0;
-	int children = 0;
-	while(node->children[sibling]) {
-		children += sketch(node->children[sibling], level + 1, sequence + children);
-		
-		sibling++;
-		if(!node->children[sibling]) {
-			return children;
-		}
-	}
-	return children + 1;
-}
-
-
-void render() {
-	void check_rc(void) {
-		row = 0;
-		column = 0;
-
-		for(int i = 0; i < ROW; i++) {
-			for(int j = 0; j < COLUMN -1; j++) {
-				if(canvas[i][j].exsisted) {
-					if(row < i)
-						row = i;
-					if(column < j)
-						column = j;
-				}
-			}
-		}
-
-		row++;
-		column++;
-		return;
-	}
-	Pixel* parent(int row, int column) {
-		for(int i = row; i >= 0; i--) {
-			if(!canvas[i][column].exsisted)
-				continue;
-			return &canvas[i][column];
-		}
-		return NULL;
-	}
-	bool hasSibling(int row, int column) {
-		Pixel* pixel = parent(row, column);
-		if(pixel)
-			if(pixel->children > 0)
-				return true;
-		return false;
-	}
-	int check_blank(int column) {
-		int rtn = 0;
-		for(int i = 0; i < row; i++) {
-			if(canvas[i][column].exsisted) {
-				int tmp = strlen(canvas[i][column].node->name);
-				if(rtn < tmp)
-					rtn = tmp;
-			}
-		}
-		return rtn;
-	}
-	check_rc();
-
-	for(int i = 0; i < row; i++) {
-		for(int j = 0; j < column; j++) {
-			char pipe[3];
-			if(!canvas[i][j + 1].exsisted) {
-				strcpy(pipe, "   ");
-				if(hasSibling(i, j))
-					strcpy(pipe, " | ");
-			} else {
-				int pipe_flag = canvas[i][j + 1].pipe;
-				switch(pipe_flag) {
-					case 0:
-						strcpy(pipe, "-+-");
-						break;
-					case 1:
-						strcpy(pipe, "---");
-						break;
-					case 2:
-						strcpy(pipe, " +-");
-						break;
-					case 3:
-						strcpy(pipe, " +-");
-						break;
-					default:
-						break;
-				}
-				Pixel* pixel = parent(i, j);
-				if(pixel)
-					pixel->children--;
-			}
-			char temp[8] = { 0, };
-			int len = check_blank(j);
-			if(!canvas[i][j].exsisted) {
-			for(int k = 0; k < len - 1; k++) {
-				sprintf(temp, " %s", temp);
-			}} else {
-				int tmp = strlen(canvas[i][j].node->name);
-				if(len > tmp)
-					sprintf(temp, "-%s", canvas[i][j].node->name);
-				else
-					sprintf(temp, "%s", canvas[i][j].node->name);
-			}
-
-			printf("%s%s", temp, pipe);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
-
 static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
 	TreeNode* check_link(Node* node, List* list, TreeNode* parent, char* out_node) {
 		ListIterator iter;
@@ -402,9 +258,8 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
 
 	}
 
-	memset(canvas, 0, sizeof(canvas));
 	sketch(tree_get_root(), 0, 0);
-	render();
+	sketch_render(stdout);
 	tree_destroy(tree_get_root());
 	return 0;
 }
@@ -414,6 +269,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		return CMD_STATUS_WRONG_NUMBER;
 	}
 
+	//"-b eth0"
 	if((strcmp(argv[1], "-b") == 0) || (strcmp(argv[1], "bridge") == 0)) {
 		EndPoint* bridge = endpoint_create(1, NODE_TYPE_BRIDGE);
 		if(!bridge) {
@@ -443,6 +299,8 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		system(command);
 
 		printf("New network bridge'%s' created.\n", bridge->name);
+		//"-p #portnumber"
+		//"-p"
 	} else if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
 		int port_count = DEFAULT_HOST_PORT_COUNT;   //  default value : 1
 
@@ -467,6 +325,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		}
 
 		printf("New host device '%s' created\n", host->name);
+		//"-l str1 str2"
 	} else if((strcmp(argv[1], "-l") == 0) || (strcmp(argv[1], "link") == 0)) {
 		if(argc != 4) {
 			return CMD_STATUS_WRONG_NUMBER;
@@ -492,6 +351,8 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		}
 
 		printf("New link '%s' created\n", link->name);
+		//-s #portnumber"
+		//-s"
 	} else if((strcmp(argv[1], "-s") == 0) || (strcmp(argv[1], "switch") == 0)) {
 		int port_count = DEFAULT_SWITCH_PORT_COUNT;
 
@@ -566,6 +427,7 @@ static int cmd_activate(int argc, char** argv, void(*callback)(char* result, int
 	if(argc < 2)
 		return CMD_STATUS_WRONG_NUMBER;
 
+	//on str
 	Node* node = get_node(argv[1]);
 	if(!node) {
 		usage(argv[0]);
@@ -627,7 +489,7 @@ static int cmd_get(int argc, char** argv, void(*callback)(char* result, int exit
 		return -1;
 	}
 
-	node->get(node);
+	node->get(node, stdout);
 
 	return 0;
 }

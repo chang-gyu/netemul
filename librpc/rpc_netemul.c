@@ -419,7 +419,7 @@ static int ifconfig_req_handler(RPC_NetEmulator* rpc) {
 	if(rpc->ifconfig_handler) {
 		rpc->ifconfig_handler(rpc, rpc->ifconfig_handler_context, ifconfig_handler_callback);
 	} else {
-		ifconfig_handler_callback(rpc, false);
+		ifconfig_handler_callback(rpc, "false");
 	}
 	
 	RETURN();
@@ -480,7 +480,7 @@ static int tree_req_handler(RPC_NetEmulator* rpc) {
 	if(rpc->tree_handler) {
 		rpc->tree_handler(rpc, node, rpc->tree_handler_context, tree_handler_callback);
 	} else {
-		tree_handler_callback(rpc, false);
+		tree_handler_callback(rpc, "false");
 	}
 	
 	RETURN();

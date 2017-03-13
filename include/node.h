@@ -1,6 +1,7 @@
 #ifndef __NODE_H__
 #define __NODE_H__
 
+#include <stdio.h>
 #include <stdbool.h>
 
 typedef enum {
@@ -32,7 +33,7 @@ struct _Node {
 	bool	is_active;                              	///< current status of node.
 	void    (*destroy)(Node* this);				///< destroy function of node itself.
 	bool	(*set)(Node* this, int argc, char** argv); 
-	void    (*get)(Node* this);
+	void    (*get)(Node* this, FILE* fp);
 };
 
 #endif /* __NODE_H__ */
