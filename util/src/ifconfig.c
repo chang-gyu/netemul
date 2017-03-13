@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
 	bool callback(char* result, void* context) {
 		RPC_NetEmulator* rpc = context;
-		printf("callback %s\n", result);
+		printf("%s\n", result);
 		rpc_netemul_close(rpc);
 		exit(0);
 		return true;

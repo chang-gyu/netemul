@@ -1,6 +1,6 @@
 .PHONY: all clean 
 
-CFLAGS = -I ../../include -I../include  -I ../librpc -O2 -g -Wall -Werror -m64 -std=gnu99 -fms-extensions -DLINUX
+CFLAGS = -I ../../include -I../include  -I ../librpc -O2 -g -Wall -Werror -m64 -std=gnu99 -fms-extensions -D__LINUX
 LIBS =  ../librpc/librpc_netemul.a ../libumpn.a
 
 all: help ifconfig list tree create destroy on off set get manager
