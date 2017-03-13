@@ -7,30 +7,7 @@
 #include <rpc_netemul.h>
 
 int main(int argc, char* argv[]) {
-	printf("*** Network Emulator List ***\n");
-
-	int opt;
-	uint8_t node_type = NODE_TYPE_NONE;
-
-	if((opt = getopt(argc, argv, "bplsh")) != -1) {
-		switch(opt) {
-			case 'b':
-				node_type = NODE_TYPE_BRIDGE;
-				break;
-			case 'p':
-				node_type = NODE_TYPE_HOST;
-				break;
-			case 'l':
-				node_type = NODE_TYPE_LINK;
-				break;
-			case 's':
-				node_type = NODE_TYPE_ETHER_SWITCH;
-				break;
-			case 'h':
-				node_type = NODE_TYPE_HUB_SWITCH;
-				break;
-		}
-	}
+	printf("*** Network Emulator Interface Configuration ***\n");
 
 	char* host = getenv("NETEMUL_ADDR");
 	char* _port = getenv("NETEMUL_PORT");
@@ -56,10 +33,12 @@ int main(int argc, char* argv[]) {
 		return true;
 	}
 
-	rpc_list(rpc, node_type, callback, rpc);
+	rpc_ifconfig(rpc, callback, rpc);
 	
 	while(1) {
 		rpc_netemul_loop(rpc);
+		if(rpc_netemul_is_closed(rpc))
+			break;
 	}
 
 	return 0;

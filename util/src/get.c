@@ -1,36 +1,20 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <getopt.h>
+#include <string.h>
 #include <node.h>
+#include <net/if.h>
 
+#include <composite.h>
 #include <rpc_netemul.h>
 
 int main(int argc, char* argv[]) {
-	printf("*** Network Emulator List ***\n");
+	printf("*** Network Emulator Get ***\n");
 
-	int opt;
-	uint8_t node_type = NODE_TYPE_NONE;
-
-	if((opt = getopt(argc, argv, "bplsh")) != -1) {
-		switch(opt) {
-			case 'b':
-				node_type = NODE_TYPE_BRIDGE;
-				break;
-			case 'p':
-				node_type = NODE_TYPE_HOST;
-				break;
-			case 'l':
-				node_type = NODE_TYPE_LINK;
-				break;
-			case 's':
-				node_type = NODE_TYPE_ETHER_SWITCH;
-				break;
-			case 'h':
-				node_type = NODE_TYPE_HUB_SWITCH;
-				break;
-		}
+	if(argc != 2) { 
+		printf("./get [NODE]\n");
+		return -1;
 	}
+	printf("Node Name: %s\n", argv[1]);
 
 	char* host = getenv("NETEMUL_ADDR");
 	char* _port = getenv("NETEMUL_PORT");
@@ -49,18 +33,16 @@ int main(int argc, char* argv[]) {
 	}
 
 	bool callback(char* result, void* context) {
-		RPC_NetEmulator* rpc = context;
+		//TODO check result
 		printf("%s\n", result);
 		rpc_netemul_close(rpc);
 		exit(0);
 		return true;
 	}
 
-	rpc_list(rpc, node_type, callback, rpc);
-	
-	while(1) {
+	rpc_get(rpc, argv[1], callback, NULL);
+	while(1)
 		rpc_netemul_loop(rpc);
-	}
 
 	return 0;
 }

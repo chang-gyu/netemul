@@ -114,6 +114,7 @@ int main(int argc, char* argv[]) {
 	bool callback(bool result, void* context) {
 		//TODO check result
 		printf("%s\n", result ? "Create Success" : "Create Fail");
+		rpc_netemul_close(rpc);
 		exit(0);
 		return true;
 	}

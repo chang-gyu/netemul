@@ -315,11 +315,10 @@ static int hello_req_handler(RPC_NetEmulator* rpc) {
 }
 
 // help client API
-int rpc_help(RPC_NetEmulator* rpc, uint8_t type, bool(*callback)(char* result, void* context), void* context) {
+int rpc_help(RPC_NetEmulator* rpc, bool(*callback)(char* result, void* context), void* context) {
 	INIT();
 	
 	WRITE(write_uint16(rpc, RPC_NETEMUL_TYPE_HELP_REQ));
-	WRITE(write_uint8(rpc, type));
 	
 	rpc->help_callback = callback;
 	rpc->help_context = context;
@@ -332,7 +331,7 @@ static int help_res_handler(RPC_NetEmulator* rpc) {
 	
 	char* result;
 	uint16_t len;
-	//TODO string read
+
 	READ(read_string(rpc, &result, &len));
 	
 	if(rpc->help_callback && !rpc->help_callback(result, rpc->help_context)) {
@@ -344,11 +343,10 @@ static int help_res_handler(RPC_NetEmulator* rpc) {
 }
 
 // help server API
-void rpc_help_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context) {
+void rpc_help_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context) {
 	rpc->help_handler = handler;
 	rpc->help_handler_context = context;
 }
-
 	
 static void help_handler_callback(RPC_NetEmulator* rpc, char* result) {
 	INIT2();
@@ -362,24 +360,20 @@ static void help_handler_callback(RPC_NetEmulator* rpc, char* result) {
 static int help_req_handler(RPC_NetEmulator* rpc) {
 	INIT();
 	
-	uint8_t type;
-	READ(read_uint8(rpc, &type));
-	
 	if(rpc->help_handler) {
-		rpc->help_handler(rpc, type, rpc->help_handler_context, help_handler_callback);
+		rpc->help_handler(rpc, rpc->help_handler_context, help_handler_callback);
 	} else {
-		help_handler_callback(rpc, false);
+		help_handler_callback(rpc, "false");
 	}
 	
 	RETURN();
 }
 
 // ifconfig client API
-int rpc_ifconfig(RPC_NetEmulator* rpc, uint8_t type, bool(*callback)(char* result, void* context), void* context) {
+int rpc_ifconfig(RPC_NetEmulator* rpc, bool(*callback)(char* result, void* context), void* context) {
 	INIT();
 	
 	WRITE(write_uint16(rpc, RPC_NETEMUL_TYPE_IFCONFIG_REQ));
-	WRITE(write_uint8(rpc, type));
 	
 	rpc->ifconfig_callback = callback;
 	rpc->ifconfig_context = context;
@@ -404,7 +398,7 @@ static int ifconfig_res_handler(RPC_NetEmulator* rpc) {
 }
 
 // ifconfig server API
-void rpc_ifconfig_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context) {
+void rpc_ifconfig_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context) {
 	rpc->ifconfig_handler = handler;
 	rpc->ifconfig_handler_context = context;
 }
@@ -422,13 +416,10 @@ static void ifconfig_handler_callback(RPC_NetEmulator* rpc, char* result) {
 static int ifconfig_req_handler(RPC_NetEmulator* rpc) {
 	INIT();
 	
-	uint8_t type;
-	READ(read_uint8(rpc, &type));
-	
 	if(rpc->ifconfig_handler) {
-		rpc->ifconfig_handler(rpc, type, rpc->ifconfig_handler_context, ifconfig_handler_callback);
+		rpc->ifconfig_handler(rpc, rpc->ifconfig_handler_context, ifconfig_handler_callback);
 	} else {
-		ifconfig_handler_callback(rpc, false);
+		ifconfig_handler_callback(rpc, "false");
 	}
 	
 	RETURN();
@@ -489,7 +480,7 @@ static int tree_req_handler(RPC_NetEmulator* rpc) {
 	if(rpc->tree_handler) {
 		rpc->tree_handler(rpc, node, rpc->tree_handler_context, tree_handler_callback);
 	} else {
-		tree_handler_callback(rpc, false);
+		tree_handler_callback(rpc, "false");
 	}
 	
 	RETURN();
@@ -837,28 +828,14 @@ static int off_req_handler(RPC_NetEmulator* rpc) {
 }
 	
 // set client API
-int rpc_set(RPC_NetEmulator* rpc, SetSpec* spec, bool(*callback)(bool result, void* context), void* context) {
+int rpc_set(RPC_NetEmulator* rpc, char* node, uint8_t argc, char** argv, bool(*callback)(bool result, void* context), void* context) {
 	INIT();
 	
 	WRITE(write_uint16(rpc, RPC_NETEMUL_TYPE_SET_REQ));
-	WRITE(write_string(rpc, spec->node));
-	WRITE(write_uint8(rpc, spec->type));
-	switch(spec->type) {
-		case QOS_TYPE_BANDWIDTH:
-			WRITE(write_uint64(rpc, spec->info.integer));
-			break;
-		case QOS_TYPE_ERROR_RATE:
-			WRITE(write_double(rpc, spec->info.decimal));
-			break;
-		case QOS_TYPE_DROP_RATE:
-			WRITE(write_double(rpc, spec->info.decimal));
-			break;
-		case QOS_TYPE_LATENCY:
-			WRITE(write_uint32(rpc, spec->info.integer));
-			break;
-		case QOS_TYPE_VARIANT:
-			WRITE(write_uint32(rpc, spec->info.integer));
-			break;
+	WRITE(write_string(rpc, node));
+	WRITE(write_uint8(rpc, argc));
+	for(int i = 0; i < argc; i++) {
+		WRITE(write_string(rpc, argv[i]));
 	}
 	
 	rpc->set_callback = callback;
@@ -882,7 +859,7 @@ static int set_res_handler(RPC_NetEmulator* rpc) {
 }
 
 // set server API
-void rpc_set_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, SetSpec* spec, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context) {
+void rpc_set_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, uint8_t argc, char** argv, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context) {
 	rpc->set_handler = handler;
 	rpc->set_handler_context = context;
 }
@@ -899,35 +876,29 @@ static void set_handler_callback(RPC_NetEmulator* rpc, bool result) {
 static int set_req_handler(RPC_NetEmulator* rpc) {
 	INIT();
 	
-	SetSpec spec;
 	char* node;
 	uint16_t len;
 	READ(read_string(rpc, &node, &len));
-	strncpy(spec.node, node, len);
-	READ(read_uint8(rpc, &spec.type));
-	switch(spec.type) {
-		case QOS_TYPE_BANDWIDTH:
-			READ(read_uint64(rpc, &spec.info.integer));
-			break;
-		case QOS_TYPE_ERROR_RATE:
-			READ(read_double(rpc, &spec.info.decimal));
-			break;
-		case QOS_TYPE_DROP_RATE:
-			READ(read_double(rpc, &spec.info.decimal));
-			break;
-		case QOS_TYPE_LATENCY:
-			READ(read_uint64(rpc, &spec.info.integer));
-			break;
-		case QOS_TYPE_VARIANT:
-			READ(read_uint64(rpc, &spec.info.integer));
-			break;
+	uint8_t argc;
+	READ(read_uint8(rpc, &argc));
+	char** argv = calloc(argc, sizeof(char*));
+	for(int i = 0; i < argc; i++) {
+		char* arg;
+		uint16_t len;
+		READ(read_string(rpc, &arg, &len));
+		argv[i] = strndup(arg, len);
 	}
 	
 	if(rpc->set_handler) {
-		rpc->set_handler(rpc, &spec, rpc->set_handler_context, set_handler_callback);
+		rpc->set_handler(rpc, node, argc, argv, rpc->set_handler_context, set_handler_callback);
 	} else {
 		set_handler_callback(rpc, false);
 	}
+	//TODO free argv;
+	for(int i = 0; i < argc; i++) {
+		free(argv[i]);
+	}
+	free(argv);
 	
 	RETURN();
 }
@@ -1026,7 +997,7 @@ static Handler handlers[] = {
 	get_res_handler,
 };
 
-bool rpc_loop(RPC_NetEmulator* rpc) {
+bool rpc_netemul_loop(RPC_NetEmulator* rpc) {
 	if(rpc->wbuf_index > 0 && rpc->write) {
 		if(wbuf_flush(rpc) < 0 && rpc->close) {
 			rpc->close(rpc);
@@ -1108,7 +1079,6 @@ static int sock_read(RPC_NetEmulator* rpc, void* buf, int size) {
 	int len = recv(data->fd, buf, size, MSG_DONTWAIT);
 	#if DEBUG
 	if(len > 0) {
-		printf("Read: ");
 		for(int i = 0; i < len; i++) {
 			printf("%02x ", ((uint8_t*)buf)[i]);
 		}
@@ -1133,7 +1103,6 @@ static int sock_write(RPC_NetEmulator* rpc, void* buf, int size) {
 	int len = send(data->fd, buf, size, MSG_DONTWAIT);
 	#if DEBUG
 	if(len > 0) {
-		printf("Write: ");
 		for(int i = 0; i < len; i++) {
 			printf("%02x ", ((uint8_t*)buf)[i]);
 		}

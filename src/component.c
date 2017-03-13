@@ -35,8 +35,8 @@ static bool set(Node* this, int argc, char** argv) {
 	return false;
 }
 
-static void get(Node* this) {
-	printf("Get function for '%s' is not implemented\n", this->name);
+static void get(Node* this, FILE* fp) {
+	fprintf(fp, "Get function for '%s' is not implemented\n", this->name);
 }
 
 static void send(Component* this, Packet* packet) {
