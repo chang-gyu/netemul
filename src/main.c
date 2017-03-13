@@ -10,6 +10,7 @@
 #include "version.h"
 #include "manager.h"
 #include "command.h"
+#include "rpc_manager.h"
 
 #ifndef __LINUX
 #include <thread.h>
@@ -113,6 +114,9 @@ int main(int argc, char** argv) {
 	/* Create network emulator manager */
 	if(!manager_init())
 		return -1;
+
+	if(rpc_manager_init() != 0)
+		return -2;
 
 	printf("\nWelcome to PacketNgin Network Emulator\n\n");
 

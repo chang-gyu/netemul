@@ -140,13 +140,13 @@ struct _RPC_NetEmulator {
 };
 
 // Client side APIs
-#ifdef LINUX
+#ifdef __LINUX
 RPC_NetEmulator* rpc_netemul_open(const char* host, int port, int timeout);
 void rpc_netemul_close(RPC_NetEmulator* rpc);
 RPC_NetEmulator* rpc_netemul_listen(int port);
 RPC_NetEmulator* rpc_netemul_accept(RPC_NetEmulator* rpc);
 bool rpc_netemul_is_closed(RPC_NetEmulator* rpc);
-#endif /* LINUX */
+#endif /* __LINUX */
 
 int rpc_hello(RPC_NetEmulator* rpc, bool(*callback)(void* context), void* context);
 int rpc_help(RPC_NetEmulator* rpc, bool(*callback)(char* result, void* context), void* context);
