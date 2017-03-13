@@ -372,6 +372,7 @@ static void off_handler(RPC_NetEmulator* rpc, char* node_name, void* context, vo
 
 static void set_handler(RPC_NetEmulator* rpc, char* node_name, uint8_t argc, char** argv, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)) {
 	Node* node = get_node(node_name);
+
 	if(!node) {
 		callback(rpc, false);
 		return;

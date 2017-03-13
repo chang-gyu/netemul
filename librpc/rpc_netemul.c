@@ -878,6 +878,8 @@ static int set_req_handler(RPC_NetEmulator* rpc) {
 	char* node;
 	uint16_t len;
 	READ(read_string(rpc, &node, &len));
+	char node_name[IFNAMSIZ] = {0,};
+	memcpy(node_name, node, len);
 	uint8_t argc;
 	READ(read_uint8(rpc, &argc));
 	char** argv = calloc(argc, sizeof(char*));
@@ -889,7 +891,7 @@ static int set_req_handler(RPC_NetEmulator* rpc) {
 	}
 	
 	if(rpc->set_handler) {
-		rpc->set_handler(rpc, node, argc, argv, rpc->set_handler_context, set_handler_callback);
+		rpc->set_handler(rpc, node_name, argc, argv, rpc->set_handler_context, set_handler_callback);
 	} else {
 		set_handler_callback(rpc, false);
 	}
