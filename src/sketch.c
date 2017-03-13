@@ -20,37 +20,42 @@ static int column;
 int sketch(TreeNode* node, int level, int sequence) {
 	memset(canvas, 0, sizeof(canvas));
 
-	canvas[sequence][level].node = (Node*)node->self;
-	canvas[sequence][level].exsisted = true;
-	if(node->count > 0)
-		canvas[sequence][level].children = node->count;
-	else
-		canvas[sequence][level].children = node->count;
+	int _sketch(TreeNode* node, int level, int sequence) {
+		canvas[sequence][level].node = (Node*)node->self;
+		canvas[sequence][level].exsisted = true;
+		if(node->count > 0)
+			canvas[sequence][level].children = node->count;
+		else
+			canvas[sequence][level].children = node->count;
 
-	TreeNode* parent = node->parent;
-	if(parent != NULL) {
-		if(parent->count == 1) 
-			canvas[sequence][level].pipe = 1;
-		else {
-			canvas[sequence][level].pipe = 3;
-			if(canvas[sequence][level].node == (Node*)parent->children[parent->count - 1]->self)
-				canvas[sequence][level].pipe = 2;
-			else if(canvas[sequence][level].node == (Node*)parent->children[0]->self)
-				canvas[sequence][level].pipe = 0;
-		}
-	} 
+		TreeNode* parent = node->parent;
+		if(parent != NULL) {
+			if(parent->count == 1) 
+				canvas[sequence][level].pipe = 1;
+			else {
+				canvas[sequence][level].pipe = 3;
+				if(canvas[sequence][level].node == (Node*)parent->children[parent->count - 1]->self)
+					canvas[sequence][level].pipe = 2;
+				else if(canvas[sequence][level].node == (Node*)parent->children[0]->self)
+					canvas[sequence][level].pipe = 0;
+			}
+		} 
 
-	int sibling = 0;
-	int children = 0;
-	while(node->children[sibling]) {
-		children += sketch(node->children[sibling], level + 1, sequence + children);
-		
-		sibling++;
-		if(!node->children[sibling]) {
-			return children;
+		int sibling = 0;
+		int children = 0;
+		while(node->children[sibling]) {
+			children += _sketch(node->children[sibling], level + 1, sequence + children);
+
+			sibling++;
+			if(!node->children[sibling]) {
+				return children;
+			}
 		}
+		return children + 1;
 	}
-	return children + 1;
+
+
+	return _sketch(node, level, sequence);
 }
 
 
@@ -104,7 +109,7 @@ void sketch_render(FILE* fp) {
 
 	for(int i = 0; i < row; i++) {
 		for(int j = 0; j < column; j++) {
-			char pipe[3];
+			char pipe[4];
 			if(!canvas[i][j + 1].exsisted) {
 				strcpy(pipe, "   ");
 				if(hasSibling(i, j))
@@ -134,9 +139,10 @@ void sketch_render(FILE* fp) {
 			char temp[8] = { 0, };
 			int len = check_blank(j);
 			if(!canvas[i][j].exsisted) {
-			for(int k = 0; k < len - 1; k++) {
-				sprintf(temp, " %s", temp);
-			}} else {
+				for(int k = 0; k < len - 1; k++) {
+					sprintf(temp, " %s", temp);
+				}
+			} else {
 				int tmp = strlen(canvas[i][j].node->name);
 				if(len > tmp)
 					sprintf(temp, "-%s", canvas[i][j].node->name);

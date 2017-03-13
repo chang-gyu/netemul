@@ -220,7 +220,7 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
 		return NULL;
 	}
 
-	if(!((argc == 1) || (argc == 2)))
+	if(argc != 2)
 		return CMD_STATUS_WRONG_NUMBER;
 
 	Manager* manager = get_manager();
@@ -239,25 +239,22 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
 		if(node->type == NODE_TYPE_LINK)
 			if(!list_add(composites, node)) {
 				list_destroy(composites);
-				return false;
+				return -1;
 			}
 	}
 
 	tree_init();
 
-	if(argc == 1) {
-	} else if(argc == 2) {
-		Node* node = get_node(argv[1]);
-		if(!node) {
-			usage(argv[0]);
-			printf("Node '%s' does not exist\n", argv[1]);
-			list_destroy(composites);
-			return -1;
-		}
-
-		TreeNode* this = tree_add(tree_get_root(), node);
-		check_node(node, composites, this);
+	Node* node = get_node(argv[1]);
+	if(!node) {
+		usage(argv[0]);
+		printf("Node '%s' does not exist\n", argv[1]);
+		list_destroy(composites);
+		return -1;
 	}
+
+	TreeNode* this = tree_add(tree_get_root(), node);
+	check_node(node, composites, this);
 
 	sketch(tree_get_root(), 0, 0);
 	sketch_render(stdout);
