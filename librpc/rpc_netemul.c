@@ -1026,7 +1026,7 @@ static Handler handlers[] = {
 	get_res_handler,
 };
 
-bool rpc_loop(RPC_NetEmulator* rpc) {
+bool rpc_netemul_loop(RPC_NetEmulator* rpc) {
 	if(rpc->wbuf_index > 0 && rpc->write) {
 		if(wbuf_flush(rpc) < 0 && rpc->close) {
 			rpc->close(rpc);
@@ -1108,7 +1108,6 @@ static int sock_read(RPC_NetEmulator* rpc, void* buf, int size) {
 	int len = recv(data->fd, buf, size, MSG_DONTWAIT);
 	#if DEBUG
 	if(len > 0) {
-		printf("Read: ");
 		for(int i = 0; i < len; i++) {
 			printf("%02x ", ((uint8_t*)buf)[i]);
 		}
@@ -1133,7 +1132,6 @@ static int sock_write(RPC_NetEmulator* rpc, void* buf, int size) {
 	int len = send(data->fd, buf, size, MSG_DONTWAIT);
 	#if DEBUG
 	if(len > 0) {
-		printf("Write: ");
 		for(int i = 0; i < len; i++) {
 			printf("%02x ", ((uint8_t*)buf)[i]);
 		}

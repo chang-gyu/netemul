@@ -16,14 +16,7 @@ static void create_handler(RPC_NetEmulator* rpc_netemul, CreateSpec* spec, void*
 }
 
 static void on_handler(RPC_NetEmulator* rpc_netemul, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc_netemul, bool result)) {
-	Node* node = get_node(node);
-	if(!node) {
-		printf("Node '%s' does not exist\n", node);
-		callback(rpc_netemul, false);
-		return;
-	}
-
-	node->is_active = true;
+	printf("on\n");
 	callback(rpc_netemul, true);
 }
 
