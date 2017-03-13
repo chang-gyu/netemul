@@ -75,8 +75,10 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 			Node* node = (Node*)entry->data;
 		
 			if(node->type == type)
-				if(!list_add(components, node))
+				if(!list_add(components, node)) {
+					list_destroy(components);
 					return false;
+				}
 		}
 
 		switch(type) {
@@ -168,15 +170,14 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
 	TreeNode* check_link(Node* node, List* list, TreeNode* parent, char* out_node) {
-		ListIterator iter;
-		list_iterator_init(&iter, list);
-
 		char temp[8];
 		if(node->type < 100)
 			return NULL;
 
 		Composite* _composite = (Composite*)node;
 
+		ListIterator iter;
+		list_iterator_init(&iter, list);
 		while(list_iterator_has_next(&iter)) {
 			Link* link = list_iterator_next(&iter);
 
@@ -236,31 +237,33 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
 		Node* node = (Node*)entry->data;
 
 		if(node->type == NODE_TYPE_LINK)
-			if(!list_add(composites, node))
+			if(!list_add(composites, node)) {
+				list_destroy(composites);
 				return false;
+			}
 	}
 
 	tree_init();
 
 	if(argc == 1) {
-
-
 	} else if(argc == 2) {
 		Node* node = get_node(argv[1]);
 		if(!node) {
 			usage(argv[0]);
 			printf("Node '%s' does not exist\n", argv[1]);
+			list_destroy(composites);
 			return -1;
 		}
 
 		TreeNode* this = tree_add(tree_get_root(), node);
 		check_node(node, composites, this);
-
 	}
 
 	sketch(tree_get_root(), 0, 0);
 	sketch_render(stdout);
 	tree_destroy(tree_get_root());
+	list_destroy(composites);
+
 	return 0;
 }
 
