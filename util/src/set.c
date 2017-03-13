@@ -8,7 +8,7 @@
 #include <rpc_netemul.h>
 
 int main(int argc, char* argv[]) {
-	printf("*** Network Emulator Activate ***\n");
+	printf("*** Network Emulator Set ***\n");
 
 	if(argc < 4) { 
 		printf("./set [NODE] [Option[Value]]\n");

@@ -8,7 +8,7 @@
 #include <rpc_netemul.h>
 
 int main(int argc, char* argv[]) {
-	printf("*** Network Emulator Activate ***\n");
+	printf("*** Network Emulator Destroy ***\n");
 
 	if(argc != 2) { 
 		printf("./destroy [NODE]\n");
