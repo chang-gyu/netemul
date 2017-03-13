@@ -386,20 +386,14 @@ static void set_handler(RPC_NetEmulator* rpc, char* node_name, uint8_t argc, cha
 }
 
 static void get_handler(RPC_NetEmulator* rpc, char* node_name, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
-	Node* node = get_node(node_name);
-
 	char* stream;
 	size_t size;
 	FILE* fp = open_memstream(&stream, &size);
-	extern FILE* stdout;
-	FILE temp = *stdout;
-	*stdout = *fp;
 
+	Node* node = get_node(node_name);
 	if(!node) {
-		fprintf(stdout, "Node does not exist\n");
-		*stdout = temp;
+		fprintf(fp, "Node does not exist\n");
 		fclose(fp);
-		printf("%ld\n", size);
 		callback(rpc, stream);
 		free(stream);
 		return;
@@ -407,7 +401,6 @@ static void get_handler(RPC_NetEmulator* rpc, char* node_name, void* context, vo
 
 	node->get(node, fp);
 	fclose(fp);
-	*stdout = temp;
 	callback(rpc, stream);
 	free(stream);
 }
