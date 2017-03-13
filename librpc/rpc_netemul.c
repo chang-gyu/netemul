@@ -800,7 +800,6 @@ void rpc_off_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, 
 	rpc->off_handler = handler;
 	rpc->off_handler_context = context;
 }
-
 	
 static void off_handler_callback(RPC_NetEmulator* rpc, bool result) {
 	INIT2();
@@ -819,7 +818,7 @@ static int off_req_handler(RPC_NetEmulator* rpc) {
 	READ(read_string(rpc, &node, &len));
 	
 	if(rpc->off_handler) {
-		rpc->off_handler(rpc, node, rpc->on_handler_context, on_handler_callback);
+		rpc->off_handler(rpc, node, rpc->off_handler_context, off_handler_callback);
 	} else {
 		off_handler_callback(rpc, false);
 	}
