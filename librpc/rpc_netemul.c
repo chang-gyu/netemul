@@ -549,7 +549,7 @@ static int list_req_handler(RPC_NetEmulator* rpc) {
 	if(rpc->list_handler) {
 		rpc->list_handler(rpc, type, rpc->list_handler_context, list_handler_callback);
 	} else {
-		list_handler_callback(rpc, false);
+		list_handler_callback(rpc, "false");
 	}
 	
 	RETURN();
