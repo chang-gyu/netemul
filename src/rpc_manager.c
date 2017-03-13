@@ -366,7 +366,7 @@ static void off_handler(RPC_NetEmulator* rpc, char* node_name, void* context, vo
 	}
 
 	node->is_active = false;
-	callback(rpc, false);
+	callback(rpc, true);
 	return;
 }
 
