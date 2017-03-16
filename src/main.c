@@ -12,56 +12,7 @@
 #include "command.h"
 #include "rpc_manager.h"
 
-#ifndef __LINUX
-#include <thread.h>
-void ginit(int argc, char** argv) {
-}
-
-void init(int argc, char** argv) {
-}
-
-void destroy() {
-}
-
-void gdestroy() {
-}
-
-int main(int argc, char** argv) { 
-	printf("Thread %d booting\n", thread_id());
-
-	if(thread_id() == 0) {
-		ginit(argc, argv);
-	}
-	thread_barrior();
-
-	init(argc, argv);
-
-	thread_barrior();
-
-	/* Create network emulator manager */
-	if(!manager_init())
-		return -1;
-
-	printf("\nWelcome to PacketNgin Network Emulator\n\n");
-
-	/* Event machine start */
-	while(1) 
-		event_loop();
-
-	thread_barrior();
-
-	destory();
-	
-	thread_barrior();
-
-	if(thread_id() == 0) {
-		gdestroy(argc, argv);
-	}
-
-	return 0;
-}
-#else
-
+#ifdef __LINUX
 static void help() {
 	printf("Usage: netemul [Options]\n");
 	printf("Option:\n");
@@ -78,10 +29,19 @@ int main(int argc, char** argv) {
 
 	/* Process option for program */
 	static const struct option options[] = {
-		{ .name = "help", .val = 'h' },
-		{ .name = "version", .val = 'v' },
-		{ .name = "script", .has_arg = required_argument, .val = 's' },
-		{ 0 }
+		{ 
+		.name = "help",
+		.val = 'h' },
+		{ 
+		.name = "version", 
+		.val = 'v' },
+		{ 
+		.name = "script", 
+		.has_arg = required_argument, 
+		.val = 's' },
+		{ 
+		0 
+		}
 	};
 
 	char* script = "sc"; // NULL;
@@ -134,6 +94,54 @@ int main(int argc, char** argv) {
 	/* Event machine start */
 	while(1) 
 		event_loop();
+
+	return 0;
+}
+#else
+#include <thread.h>
+void ginit(int argc, char** argv) {
+}
+
+void init(int argc, char** argv) {
+}
+
+void destroy() {
+}
+
+void gdestroy() {
+}
+
+int main(int argc, char** argv) { 
+	printf("Thread %d booting\n", thread_id());
+
+	if(thread_id() == 0) {
+		ginit(argc, argv);
+	}
+	thread_barrior();
+
+	init(argc, argv);
+
+	thread_barrior();
+
+	/* Create network emulator manager */
+	if(!manager_init())
+		return -1;
+
+	printf("\nWelcome to PacketNgin Network Emulator\n\n");
+
+	/* Event machine start */
+	while(1) 
+		event_loop();
+
+	thread_barrior();
+
+	destory();
+	
+	thread_barrior();
+
+	if(thread_id() == 0) {
+		gdestroy(argc, argv);
+	}
 
 	return 0;
 }

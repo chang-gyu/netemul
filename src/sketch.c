@@ -54,7 +54,6 @@ int sketch(TreeNode* node, int level, int sequence) {
 		return children + 1;
 	}
 
-
 	return _sketch(node, level, sequence);
 }
 

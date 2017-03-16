@@ -184,6 +184,7 @@ static void send(Component* this, Packet* packet) {
 		this->out->send(this->out, packet);
 		return;
 	} else if(cable->latency >= 100) {
+//TODO: talk to president.
 		delay -= 120;
 	}
 		

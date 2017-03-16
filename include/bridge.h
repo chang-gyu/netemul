@@ -9,6 +9,14 @@ typedef struct {
 	EndPoint;
 } Bridge;
 
+typedef struct _b {
+	Bridge* bridge;
+	char* interface;
+} Br;
+
+void bridge_init();
+List* bridge_getlist();
+void bridge_attach(Bridge* bridge, char* name);
 EndPoint* bridge_create(void);
 
 #endif /* __BRIDGE_H__ */

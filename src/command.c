@@ -15,8 +15,8 @@
 #include "host.h"
 #include "tree.h"
 #include "sketch.h"
+#include "bridge.h"
 
-List* bridgelist;
 // Ctrl + C -> needs event handler.
 
 static void usage(const char* cmd) {
@@ -30,9 +30,10 @@ static void usage(const char* cmd) {
 
 static int cmd_exit(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
 	ListIterator iter;
-	list_iterator_init(&iter, bridgelist);
+	list_iterator_init(&iter, bridge_getlist());
 	while(list_iterator_has_next(&iter)) {
-		char* name = list_iterator_next(&iter);
+		Br* br = list_iterator_next(&iter);
+		char* name = br->interface;
 		char command[64] = { 0, };
 		sprintf(command, "/sbin/ifconfig %s down", name);
 		system(command);
@@ -188,10 +189,10 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
 					Cable* cable = (Cable*)link->nodes[j];
 
 					if(!strcmp(temp, cable->in->name)) { 
-						//	TreeNode* rtn = tree_add(parent, link);
+						//TreeNode* rtn = tree_add(parent, link);
 						list_remove_data(list, link);
 						strcpy(out_node, cable->out->name);
-						//					return rtn;
+						//return rtn;
 						return parent;
 					}
 				}
@@ -271,32 +272,13 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 
 	//"-b eth0"
 	if((strcmp(argv[1], "-b") == 0) || (strcmp(argv[1], "bridge") == 0)) {
+		///TODO: check eth0 is really exsited.
 		EndPoint* bridge = endpoint_create(1, NODE_TYPE_BRIDGE);
 		if(!bridge) {
 			printf("Phsical create failed\n");
 			return -1;
 		}
-
-		if(!bridgelist)
-			bridgelist = list_create(NULL);
-
-		char command[64] = { 0, };
-		sprintf(command, "/sbin/brctl addbr %s", bridge->name);
-		system(command);
-
-		list_add(bridgelist, bridge->name);
-
-		sprintf(command, "/sbin/brctl addif %s %s.0", bridge->name, bridge->name);
-		system(command);
-
-		sprintf(command, "/sbin/ifconfig %s 0", argv[2]);
-		system(command);
-
-		sprintf(command, "/sbin/brctl addif %s %s", bridge->name, argv[2]);
-		system(command);
-
-		sprintf(command, "/sbin/ifconfig %s up", bridge->name);
-		system(command);
+		bridge_attach((Bridge*)bridge, argv[2]);
 
 		printf("New network bridge'%s' created.\n", bridge->name);
 		//"-p #portnumber"

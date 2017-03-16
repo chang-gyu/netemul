@@ -16,6 +16,7 @@
 #include "host.h"
 #include "tree.h"
 #include "sketch.h"
+#include "bridge.h"
 
 static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
 	char* stream;
@@ -262,7 +263,7 @@ static void create_handler(RPC_NetEmulator* rpc, CreateSpec* spec, void* context
 				return;
 			}
 
-			extern List* bridgelist;
+			List* bridgelist = bridge_getlist();
 			//TODO error check
 			if(!bridgelist)
 				bridgelist = list_create(NULL);
