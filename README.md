@@ -49,6 +49,9 @@ To list information about nodes. If type of node is not specified, list up all n
 
 * _NODE_TYPE_
 
+> Bridge : Bridging physical network interface.
+>> **bridge** | **-b**
+
 > Host : End point device. 
 >> **host** | **-p**
 >
@@ -71,6 +74,7 @@ More Specifically.
 	$ create switch [PORT_COUNT]
 	$ create hub [PORT_COUNT]
 	$ create host [PORT_COUNT]
+	$ create bridge [PHYSICAL NETWORK INTERFACE)
 	$ create link [NODE] [NODE]
     
 * _PORT_COUNT_
