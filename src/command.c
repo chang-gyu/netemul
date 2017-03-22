@@ -75,7 +75,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 		switch(type) {
 			case NODE_TYPE_BRIDGE:
-				list_component("Interface", components);
+				list_component("Bridge", components);
 				break;
 			case NODE_TYPE_HOST:
 				list_component("Host", components);
@@ -249,7 +249,7 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
 	check_node(node, composites, this);
 
 	sketch(tree_get_root(), 0, 0);
-	sketch_render(stdout);
+	printf("%s", sketch_render());
 	tree_destroy(tree_get_root());
 	list_destroy(composites);
 
@@ -269,7 +269,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 			printf("Bridge create failed:0\n");
 			return -1;
 		}
-		printf("debug\n");
+		printf("debu1\n");
 		if(!bridge_attach((Bridge*)bridge, argv[2])) {
 				printf("Bridge create failed:1\n");
 				Node* node = (Node*)bridge;

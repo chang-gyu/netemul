@@ -43,23 +43,22 @@ static char* get(Node* this) {
 	Composite* composite = (Composite*)this;
 
 	sprintf(result, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
-	sprintf(result, "\t\t-------------------------------\n");
-	sprintf(result, "\t\t");
+	sprintf(result, "%s\t\t-------------------------------\n\t\t", result);
 	for(int i = 0; i < composite->node_count; i++) {
-		sprintf(result, "[%02d] ", i);
+		sprintf(result, "%s[%02d] ", result, i);
 	}
-	sprintf(result, "\n");
+	sprintf(result, "%s\n", result);
 
-	sprintf(result, "\t\t");
+	sprintf(result, "%s\t\t", result);
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
 		if(component->out) 
-			sprintf(result, " %-4s", component->out->owner->name);
+			sprintf(result, "%s %-4s", result, component->out->owner->name);
 		else
-			sprintf(result, " --  ");
+			sprintf(result, "%s --  ", result);
 	}
-	sprintf(result, "\n\n");
+	sprintf(result, "%s\n\n", result);
 
 	return result;		//TODO malloc size check
 }

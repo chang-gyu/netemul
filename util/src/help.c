@@ -27,21 +27,20 @@ int main(int argc, char* argv[]) {
 	}
 
 	bool callback(Vector* vector, void* context) {
-		printf("final\n=========\n");
 		RPC_NetEmulator* rpc = context;
+
 		VectorIterator iter;
 		vector_iterator_init(&iter, vector);
 		while(vector_iterator_has_next(&iter)) {
 			char* result = vector_iterator_next(&iter);
 			printf("%s", result);
 		}
-
 		vector_destroy(vector);
+
 		rpc_netemul_close(rpc);
 		exit(0);
 		return true;
 	}
-	printf("before rpc_help\n");
 
 	rpc_help(rpc, callback, rpc);
 	

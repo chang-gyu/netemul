@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
 			printf("%s", result);
 		}
 		vector_destroy(vector);
+
 		rpc_netemul_close(rpc);
 		exit(0);
 		return true;

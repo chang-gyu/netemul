@@ -18,7 +18,7 @@
 #include <stdlib.h> 	//exit
 
 void signal_exit() {
-		printf("\n===================================================\nbye!\n");
+		printf("\n===============================================\nbye!\n");
 		bridge_destroy();
 
 		exit(0);

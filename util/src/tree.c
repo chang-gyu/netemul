@@ -32,14 +32,24 @@ int main(int argc, char* argv[]) {
 		exit(-1);
 	}
 
-	bool callback(char* result, void* context) {
-		printf("%s\n", result);
+	bool callback(Vector* vector, void* context) {
+		RPC_NetEmulator* rpc = context;
+
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) {
+			char* result = vector_iterator_next(&iter);
+			printf("%s", result);
+		}
+		vector_destroy(vector);
+
 		rpc_netemul_close(rpc);
 		exit(0);
+
 		return true;
 	}
 
-	rpc_tree(rpc, argv[1], callback, NULL);
+	rpc_tree(rpc, argv[1], callback, rpc);
 	while(1)
 		rpc_netemul_loop(rpc);
 

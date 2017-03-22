@@ -23,87 +23,87 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node, void* context, void(*
 }
 
 static void list_handler(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
-// 	bool list(int type) {
-// 		void list_component(const char* device_name, List* list) {
-// 			printf("\t%s\n", device_name);
-// 			printf("\t=======================================\n");
-// 			ListIterator iter;
-// 			list_iterator_init(&iter, list);
-// 
-// 			while(list_iterator_has_next(&iter)) {
-// 				Node* node = list_iterator_next(&iter);
-// 				node->get(node);
-// 			}
-// 			printf("\n");
-// 		}
-// 
-// 		Manager* manager = get_manager();
-// 
-// 		MapIterator iter;
-// 		map_iterator_init(&iter, manager->nodes);
-// 
-// 		List* components = list_create(NULL);
-// 		if(!components)
-// 			return false;
-// 
-// 		while(map_iterator_has_next(&iter)) {
-// 			MapEntry* entry = map_iterator_next(&iter);
-// 			Node* node = (Node*)entry->data;
-// 		
-// 			if(node->type == type)
-// 				if(!list_add(components, node))
-// 					return false;
-// 		}
-// 
-// 		switch(type) {
-// 			case NODE_TYPE_BRIDGE:
-// 				list_component("Interface", components);
-// 				break;
-// 			case NODE_TYPE_HOST:
-// 				list_component("Host", components);
-// 				break;
-// 			case NODE_TYPE_HUB_SWITCH:
-// 				list_component("Hub Switch", components);
-// 				break;
-// 			case NODE_TYPE_ETHER_SWITCH:
-// 				list_component("Ether Switch", components);
-// 				break;
-// 			case NODE_TYPE_LINK:
-// 				list_component("Link", components);
-// 				break;
-// 		}
-// 
-// 		list_destroy(components);
-// 
-// 		return true;
-// 	}
-// 
-// 	void label(const char* label) {
-// 		printf("%s\n", label);
-// 		printf("===============================================\n");
-// 	}
-// 
-// 	char buffer[8192];
-// 	if(type == NODE_TYPE_BRIDGE || type == NODE_TYPE_NONE) {
-// 		label("Network bridges");
-// 		list(NODE_TYPE_BRIDGE);
-// 	}
-// 	if(type == NODE_TYPE_HOST || type == NODE_TYPE_NONE) {
-// 		label("Endpoint Devices");
-// 		list(NODE_TYPE_HOST);
-// 	}
-// 	if(type == NODE_TYPE_HUB_SWITCH || type == NODE_TYPE_NONE) {
-// 		label("Endpoint Devices");
-// 		list(NODE_TYPE_HUB_SWITCH);
-// 	}
-// 	if(type == NODE_TYPE_ETHER_SWITCH || type == NODE_TYPE_NONE) {
-// 		label("Hub Switch");
-// 		iist(NODE_TYPE_ETHER_SWITCH);
-// 	}
-// 	if(type == NODE_TYPE_LINK || type = NODE_TYPE_NONE) {
-// 		labeyyl("Link");
-// 		list(NODE_TYPE_LINK);
-// 	}
+ 	bool list(int type) {
+ 		void list_component(const char* device_name, List* list) {
+ 			printf("\t%s\n", device_name);
+ 			printf("\t=======================================\n");
+ 			ListIterator iter;
+ 			list_iterator_init(&iter, list);
+ 
+ 			while(list_iterator_has_next(&iter)) {
+ 				Node* node = list_iterator_next(&iter);
+ 				node->get(node);
+ 			}
+ 			printf("\n");
+ 		}
+ 
+ 		Manager* manager = get_manager();
+ 
+ 		MapIterator iter;
+ 		map_iterator_init(&iter, manager->nodes);
+ 
+ 		List* components = list_create(NULL);
+ 		if(!components)
+ 			return false;
+ 
+ 		while(map_iterator_has_next(&iter)) {
+ 			MapEntry* entry = map_iterator_next(&iter);
+ 			Node* node = (Node*)entry->data;
+ 		
+ 			if(node->type == type)
+ 				if(!list_add(components, node))
+ 					return false;
+ 		}
+ 
+ 		switch(type) {
+ 			case NODE_TYPE_BRIDGE:
+ 				list_component("Interface", components);
+ 				break;
+ 			case NODE_TYPE_HOST:
+ 				list_component("Host", components);
+ 				break;
+ 			case NODE_TYPE_HUB_SWITCH:
+ 				list_component("Hub Switch", components);
+ 				break;
+ 			case NODE_TYPE_ETHER_SWITCH:
+ 				list_component("Ether Switch", components);
+ 				break;
+ 			case NODE_TYPE_LINK:
+ 				list_component("Link", components);
+ 				break;
+ 		}
+ 
+ 		list_destroy(components);
+ 
+ 		return true;
+ 	}
+ 
+ 	void label(const char* label) {
+ 		printf("%s\n", label);
+ 		printf("===============================================\n");
+ 	}
+ 
+ 	char buffer[8192];
+ 	if(type == NODE_TYPE_BRIDGE || type == NODE_TYPE_NONE) {
+ 		label("Network bridges");
+ 		list(NODE_TYPE_BRIDGE);
+ 	}
+ 	if(type == NODE_TYPE_HOST || type == NODE_TYPE_NONE) {
+ 		label("Endpoint Devices");
+ 		list(NODE_TYPE_HOST);
+ 	}
+ 	if(type == NODE_TYPE_HUB_SWITCH || type == NODE_TYPE_NONE) {
+ 		label("Endpoint Devices");
+ 		list(NODE_TYPE_HUB_SWITCH);
+ 	}
+ 	if(type == NODE_TYPE_ETHER_SWITCH || type == NODE_TYPE_NONE) {
+ 		label("Hub Switch");
+ 		iist(NODE_TYPE_ETHER_SWITCH);
+ 	}
+ 	if(type == NODE_TYPE_LINK || type = NODE_TYPE_NONE) {
+ 		labeyyl("Link");
+ 		list(NODE_TYPE_LINK);
+ 	}
 
 	char buffer[8192];
 	sprintf(buffer, "list");

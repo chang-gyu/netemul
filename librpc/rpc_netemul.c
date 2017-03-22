@@ -376,13 +376,14 @@ static void help_handler_callback(RPC_NetEmulator* rpc, Vector* vector) {
 
 		WRITE2(write_uint16(rpc, RPC_NETEMUL_TYPE_HELP_RES));
 		WRITE2(write_uint16(rpc, vector_size(vector)));
-//		printf("vector size : %lu", vector_size(vector));	//for debug
+
 		VectorIterator iter;
 		vector_iterator_init(&iter, vector);
 		while(vector_iterator_has_next(&iter)) { 
 				char* data = vector_iterator_next(&iter);
 				WRITE2(write_string(rpc, data));  ///?????? check
 		}
+
 		vector_iterator_init(&iter, vector);
 		while(vector_iterator_has_next(&iter)) { 
 				char* data = vector_iterator_next(&iter);
@@ -476,17 +477,32 @@ int rpc_tree(RPC_NetEmulator* rpc, char* node, bool(*callback)(Vector* vector, v
 static int tree_res_handler(RPC_NetEmulator* rpc) {
 		INIT();
 
-		char* result;
-		uint16_t len;
-		//TODO string read
-		READ(read_string(rpc, &result, &len));
+		uint16_t vector_size;
+		READ(read_uint16(rpc, &vector_size));
 
-		Vector* vector = vector_create(VECTOR_INIT_SIZE, NULL);
+		Vector* vector = vector_create(vector_size, NULL);
+		for(int  i = 0; i < vector_size; i++) {
+				uint16_t len;
+				char* data;
+				int check_len = read_string(rpc, &data, &len);
+				READ(check_len);
+				vector_add(vector, strndup(data, len));
+		}
 
 		if(rpc->tree_callback && !rpc->tree_callback(vector, rpc->tree_context)) {
-				rpc->tree_callback = NULL;
-				rpc->tree_context = NULL;
+				rpc->help_callback = NULL;
+				rpc->help_context = NULL;
 		}
+
+// not reached.
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) {
+				char* str = vector_iterator_next(&iter);
+				free(str);
+		}
+
+		vector_destroy(vector);
 
 		RETURN();
 }
@@ -499,11 +515,25 @@ void rpc_tree_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc,
 
 
 static void tree_handler_callback(RPC_NetEmulator* rpc, Vector* vector) {
+		if(!vector)
+				printf("fail\n");
 		INIT2();
 
 		WRITE2(write_uint16(rpc, RPC_NETEMUL_TYPE_TREE_RES));
-		WRITE2(write_string(rpc, (char*)vector));	//TODO
+		WRITE2(write_uint16(rpc, vector_size(vector)));
 
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) { 
+				char* data = vector_iterator_next(&iter);
+				WRITE2(write_string(rpc, data));  ///?????? check
+		}
+
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) { 
+				char* data = vector_iterator_next(&iter);
+				free(data);
+		}
 		RETURN2();
 }
 
@@ -539,15 +569,33 @@ int rpc_list(RPC_NetEmulator* rpc, uint8_t type, bool(*callback)(Vector* vector,
 static int list_res_handler(RPC_NetEmulator* rpc) {
 		INIT();
 
-		char* result;
-		uint16_t len;
-		//TODO string read
-		READ(read_string(rpc, &result, &len));
-		Vector* vector = vector_create(VECTOR_INIT_SIZE, NULL);
-		if(rpc->list_callback && !rpc->list_callback(vector, rpc->list_context)) {
-				rpc->list_callback = NULL;
-				rpc->list_context = NULL;
+		uint16_t vector_size;
+
+		READ(read_uint16(rpc, &vector_size));
+
+		Vector* vector = vector_create(vector_size, NULL);
+		for(int  i = 0; i < vector_size; i++) {
+				uint16_t len;
+				char* data;
+				int check_len = read_string(rpc, &data, &len);
+				READ(check_len);
+				vector_add(vector, strndup(data, len));
 		}
+
+		if(rpc->list_callback && !rpc->list_callback(vector, rpc->list_context)) {
+				rpc->help_callback = NULL;
+				rpc->help_context = NULL;
+		}
+
+		//not reached.
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) {
+				char* str = vector_iterator_next(&iter);
+				free(str);
+		}
+
+		vector_destroy(vector);
 
 		RETURN();
 }
@@ -563,7 +611,22 @@ static void list_handler_callback(RPC_NetEmulator* rpc, Vector* vector) {
 		INIT2();
 
 		WRITE2(write_uint16(rpc, RPC_NETEMUL_TYPE_LIST_RES));
-		WRITE2(write_string(rpc, (char*)vector));	//TODO
+		WRITE2(write_uint16(rpc, vector_size(vector)));
+
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) { 
+				char* data = vector_iterator_next(&iter);
+				printf("%s\n", data);
+				WRITE2(write_string(rpc, data));  
+		}
+
+		
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) { 
+				char* data = vector_iterator_next(&iter);
+				free(data);
+		}
 
 		RETURN2();
 }
@@ -575,8 +638,10 @@ static int list_req_handler(RPC_NetEmulator* rpc) {
 		READ(read_uint8(rpc, &type));
 
 		if(rpc->list_handler) {
+				printf("345\n");
 				rpc->list_handler(rpc, type, rpc->list_handler_context, list_handler_callback);
 		} else {
+				printf("123\n");
 				list_handler_callback(rpc, NULL);	//TODO
 		}
 
@@ -958,16 +1023,32 @@ int rpc_get(RPC_NetEmulator* rpc, char* node, bool(*callback)(Vector* vector, vo
 static int get_res_handler(RPC_NetEmulator* rpc) {
 		INIT();
 
-		char* result;
-		uint16_t len;
-		//TODO string read
-		READ(read_string(rpc, &result, &len));
-		Vector* vector = vector_create(VECTOR_INIT_SIZE, NULL);
+		uint16_t vector_size;
+		READ(read_uint16(rpc, &vector_size));
+
+		Vector* vector = vector_create(vector_size, NULL);
+		for(int  i = 0; i < vector_size; i++) {
+				uint16_t len;
+				char* data;
+				int check_len = read_string(rpc, &data, &len);
+				READ(check_len);
+				vector_add(vector, strndup(data, len));
+		}
 
 		if(rpc->get_callback && !rpc->get_callback(vector, rpc->get_context)) {
-				rpc->get_callback = NULL;
-				rpc->get_context = NULL;
+				rpc->help_callback = NULL;
+				rpc->help_context = NULL;
 		}
+
+// not reached.
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) {
+				char* str = vector_iterator_next(&iter);
+				free(str);
+		}
+
+		vector_destroy(vector);
 
 		RETURN();
 }
@@ -980,12 +1061,25 @@ void rpc_get_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, 
 
 
 static void get_handler_callback(RPC_NetEmulator* rpc, Vector* vector) {
+		if(!vector)
+				printf("fail\n");
 		INIT2();
 
 		WRITE2(write_uint16(rpc, RPC_NETEMUL_TYPE_GET_RES));
+		WRITE2(write_uint16(rpc, vector_size(vector)));
 
-		//WRITE2(write_string(rpc, )); //TODO
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) { 
+				char* data = vector_iterator_next(&iter);
+				WRITE2(write_string(rpc, data));  ///?????? check
+		}
 
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) { 
+				char* data = vector_iterator_next(&iter);
+				free(data);
+		}
 		RETURN2();
 }
 

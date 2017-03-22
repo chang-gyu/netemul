@@ -4,6 +4,6 @@
 #include <tree.h>
 
 int sketch(TreeNode* node, int level, int sequence);
-void sketch_render(FILE* fp);
+char* sketch_render();
 
 #endif /*__SKETCH_H__*/

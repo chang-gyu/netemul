@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 		return true;
 	}
 
-	rpc_set(rpc, argv[1], argc - 2, &argv[2], callback, NULL);
+	rpc_set(rpc, argv[1], argc - 2, &argv[2], callback, rpc);
 	while(1)
 		rpc_netemul_loop(rpc);
 

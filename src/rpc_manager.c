@@ -19,8 +19,6 @@
 #include "bridge.h"
 
 static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)) {
-//	printf("src/rpc.c help_handler is called\n");
-
 	Vector* vector = vector_create(128, NULL);
         int command_len = 0;
 	for(int i = 0; commands[i].name != NULL; i++) {
@@ -124,7 +122,7 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 		return NULL;
 	}
 
-	Vector* vector = vector_create(64, NULL);
+	Vector* vector = vector_create(128, NULL);
 
 	List* composites = list_create(NULL);
 	if(!composites) { 
@@ -162,36 +160,30 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 
 	sketch(tree_get_root(), 0, 0);
 
-	char* stream;
-	size_t size;
-	FILE* fp = open_memstream(&stream, &size);
-	sketch_render(fp);
+	char* result = sketch_render();
+	vector_add(vector, result);
 	tree_destroy(tree_get_root());
-	fclose(fp);
 	callback(rpc, vector);
 	list_destroy(composites);
-	free(stream);
 }
 
 static void list_handler(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)) {
-	Vector* vector = vector_create(128, NULL);
+	char* list(int type) {
+		char* list_component(const char* device_name, List* list) {
+			char temp[1024] = { 0, };
 
-	bool list(int type, Vector* vector) {
-		void list_component(const char* device_name, List* list) {
-			char temp[128] = { 0, };
-
-			sprintf(temp, "\t%s\n", device_name);
-			sprintf(temp, "\t=======================================\n");
+			sprintf(temp, "%s\t%s\n", temp, device_name);
+			sprintf(temp, "%s\t=======================================\n", temp);
 			ListIterator iter;
 			list_iterator_init(&iter, list);
 
 			while(list_iterator_has_next(&iter)) {
 				Node* node = list_iterator_next(&iter);
-				sprintf("%s%s\n", temp, node->get(node));
+				sprintf(temp, "%s%s\n", temp, node->get(node));
 			}
-			sprintf(temp, "\n");
+			sprintf(temp, "%s\n", temp);
 
-			vector_add(vector, strdup(temp));
+			return strdup(temp);
 		}
 
 		Manager* manager = get_manager();
@@ -212,56 +204,73 @@ static void list_handler(RPC_NetEmulator* rpc, uint8_t type, void* context, void
 					return false;
 		}
 
+		char* result = NULL;
+
 		switch(type) {
 			case NODE_TYPE_BRIDGE:
-				list_component("Interface", components);
+				result = list_component("Bridge", components);
 				break;
 			case NODE_TYPE_HOST:
-				list_component("Host", components);
+				result = list_component("Host", components);
 				break;
 			case NODE_TYPE_HUB_SWITCH:
-				list_component("Hub Switch", components);
+				result = list_component("Hub Switch", components);
 				break;
 			case NODE_TYPE_ETHER_SWITCH:
-				list_component("Ether Switch", components);
+				result = list_component("Ether Switch", components);
 				break;
 			case NODE_TYPE_LINK:
-				list_component("Link", components);
+				result = list_component("Link", components);
 				break;
 		}
 
 		list_destroy(components);
 
-		return true;
+		return result;
 	}
 
-	void label(const char* label) {
+	char* label(const char* label) {
 		char temp[128] = { 0, };
 		sprintf(temp, "%s\n", label);
 		sprintf(temp, "%s===============================================\n", temp);
 
-		vector_add(vector, strdup(temp));
+		return strdup(temp);
 	}
 
+	Vector* vector = vector_create(512, NULL);
+	char* result = NULL;
+
 	if(type == NODE_TYPE_BRIDGE || type == NODE_TYPE_NONE) {
-		label("Network bridges");
-		list(NODE_TYPE_BRIDGE, vector);
+		result = label("Network bridges");
+		vector_add(vector, result);
+		result = list(NODE_TYPE_BRIDGE);
+		vector_add(vector, result);
 	}
 	if(type == NODE_TYPE_HOST || type == NODE_TYPE_NONE) {
-		label("Endpoint Devices");
-		list(NODE_TYPE_HOST, vector);
+		result = label("Endpoint Devices");
+		vector_add(vector, result);
+		result = list(NODE_TYPE_HOST);
+		vector_add(vector, result);
 	}
 	if(type == NODE_TYPE_HUB_SWITCH || type == NODE_TYPE_NONE) {
-		label("Endpoint Devices");
-		list(NODE_TYPE_HUB_SWITCH, vector);
+		result = label("Switch");
+		vector_add(vector, result);
+		result = list(NODE_TYPE_HUB_SWITCH);
+		vector_add(vector, result);
 	}
 	if(type == NODE_TYPE_ETHER_SWITCH || type == NODE_TYPE_NONE) {
-		label("Hub Switch");
-		list(NODE_TYPE_ETHER_SWITCH, vector);
+		if(type != NODE_TYPE_NONE) {
+			result = label("Switch");
+			vector_add(vector, result);
+		}
+		result = list(NODE_TYPE_ETHER_SWITCH);
+		vector_add(vector, result);
 	}
 	if(type == NODE_TYPE_LINK || type == NODE_TYPE_NONE) {
-		label("Link");
-		list(NODE_TYPE_LINK, vector);
+		result = label("Link");
+		vector_add(vector, result);
+		result = list(NODE_TYPE_LINK);
+		vector_add(vector, result);
 	}
 
 	callback(rpc, vector);
@@ -406,7 +415,7 @@ static void get_handler(RPC_NetEmulator* rpc, char* node_name, void* context, vo
 
 	Node* node = get_node(node_name);
 	if(!node) {
-		vector_add(vector, "Node does not exist\n");
+		vector_add(vector, strdup("Node does not exist\n"));
 		callback(rpc, vector);
 		return;
 	}
