@@ -2,6 +2,7 @@
 #define __CONTROL_RPC_NETEMUL__
 
 #include <util/list.h>
+#include <util/vector.h>
 #include <control/vmspec.h>
 
 #include <net/if.h>
@@ -80,24 +81,24 @@ struct _RPC_NetEmulator {
 	bool(*hello_callback)(void* context);
 	void* hello_context;
 
-	bool(*help_callback)(char* result, void* context);
+	bool(*help_callback)(Vector* vector, void* context);
 	void* help_context;
-	void(*help_handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result));
+	void(*help_handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector));
 	void* help_handler_context;
 
-	bool(*ifconfig_callback)(char* result, void* context);
+	bool(*ifconfig_callback)(Vector* vector, void* context);
 	void* ifconfig_context;
-	void(*ifconfig_handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result));
+	void(*ifconfig_handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector));
 	void* ifconfig_handler_context;
 
-	bool(*tree_callback)(char* result, void* context);
+	bool(*tree_callback)(Vector* vector, void* context);
 	void* tree_context;
-	void(*tree_handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result));
+	void(*tree_handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector));
 	void* tree_handler_context;
 
-	bool(*list_callback)(char* result, void* context);
+	bool(*list_callback)(Vector* vector, void* context);
 	void* list_context;
-	void(*list_handler)(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result));
+	void(*list_handler)(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector));
 	void* list_handler_context;
 
 	bool(*create_callback)(bool result, void* context);
@@ -125,9 +126,9 @@ struct _RPC_NetEmulator {
 	void(*set_handler)(RPC_NetEmulator* rpc, char* node, uint8_t argc, char** argv, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result));
 	void* set_handler_context;
 
-	bool(*get_callback)(char* result, void* context);
+	bool(*get_callback)(Vector* vector, void* context);
 	void* get_context;
-	void(*get_handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result));
+	void(*get_handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector));
 	void* get_handler_context;
 
 	bool(*stdio_callback)(uint16_t written, void* context);
@@ -149,28 +150,28 @@ bool rpc_netemul_is_closed(RPC_NetEmulator* rpc);
 #endif /* __LINUX */
 
 int rpc_hello(RPC_NetEmulator* rpc, bool(*callback)(void* context), void* context);
-int rpc_help(RPC_NetEmulator* rpc, bool(*callback)(char* result, void* context), void* context);
-int rpc_ifconfig(RPC_NetEmulator* rpc, bool(*callback)(char* result, void* context), void* context);
-int rpc_tree(RPC_NetEmulator* rpc, char* node, bool(*callback)(char* result, void* context), void* context);
-int rpc_list(RPC_NetEmulator* rpc, uint8_t type, bool(*callback)(char* result, void* context), void* context);
+int rpc_help(RPC_NetEmulator* rpc, bool(*callback)(Vector* vector, void* context), void* context);
+int rpc_ifconfig(RPC_NetEmulator* rpc, bool(*callback)(Vector* vector, void* context), void* context);
+int rpc_tree(RPC_NetEmulator* rpc, char* node, bool(*callback)(Vector* vector, void* context), void* context);
+int rpc_list(RPC_NetEmulator* rpc, uint8_t type, bool(*callback)(Vector* vector, void* context), void* context);
 int rpc_create(RPC_NetEmulator* rpc, CreateSpec* spec, bool(*callback)(bool result, void* context), void* context);
 int rpc_destroy(RPC_NetEmulator* rpc, char* node, bool(*callback)(bool result, void* context), void* context);
 int rpc_on(RPC_NetEmulator* rpc, char* node, bool(*callback)(bool result, void* context), void* context);
 int rpc_off(RPC_NetEmulator* rpc, char* node, bool(*callback)(bool result, void* context), void* context);
 int rpc_set(RPC_NetEmulator* rpc, char* node, uint8_t argc, char** argv, bool(*callback)(bool result, void* context), void* context);
-int rpc_get(RPC_NetEmulator* rpc, char* node, bool(*callback)(char* result, void* context), void* context);
+int rpc_get(RPC_NetEmulator* rpc, char* node, bool(*callback)(Vector* vector, void* context), void* context);
 
 // Server side APIs
-void rpc_help_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context);
+void rpc_help_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)), void* context);
 void rpc_ifconfig_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context);
-void rpc_tree_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context);
+void rpc_tree_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)), void* context);
 void rpc_create_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, CreateSpec* spec, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context);
 void rpc_destroy_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context);
 void rpc_on_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context);
 void rpc_off_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context);
 void rpc_set_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, uint8_t argc, char** argv, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)), void* context);
-void rpc_get_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context);
-void rpc_list_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)), void* context);
+void rpc_get_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, char* node, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)), void* context);
+void rpc_list_handler(RPC_NetEmulator* rpc, void(*handler)(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)), void* context);
 
 bool rpc_netemul_loop(RPC_NetEmulator* rpc);
  

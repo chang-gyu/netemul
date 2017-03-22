@@ -7,12 +7,23 @@
 
 #include <util/event.h>
 
+#include "bridge.h"
 #include "version.h"
 #include "manager.h"
 #include "command.h"
 #include "rpc_manager.h"
 
 #ifdef __LINUX
+#include <signal.h>		//signal
+#include <stdlib.h> 	//exit
+
+void signal_exit() {
+		printf("\n===================================================\nbye!\n");
+		bridge_destroy();
+
+		exit(0);
+}
+
 static void help() {
 	printf("Usage: netemul [Options]\n");
 	printf("Option:\n");
@@ -22,6 +33,8 @@ static void help() {
 }
 
 int main(int argc, char** argv) { 
+	signal(SIGINT, (void*)signal_exit);
+
 	if(geteuid() != 0) {
 		printf("Permssion denied : $./sudo netemul \n");
 		return -1;
@@ -44,7 +57,7 @@ int main(int argc, char** argv) {
 		}
 	};
 
-	char* script = "sc"; // NULL;
+	char* script = NULL; // NULL;
 	int opt;
 
 	while((opt = getopt_long(argc, argv, "hvs:", options, NULL)) != -1) {

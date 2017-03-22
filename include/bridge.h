@@ -16,7 +16,9 @@ typedef struct _b {
 
 void bridge_init();
 List* bridge_getlist();
-void bridge_attach(Bridge* bridge, char* name);
+void _destroy(char* name);
+void bridge_destroy();
+bool bridge_attach(Bridge* bridge, char* name);
 EndPoint* bridge_create(void);
 
 #endif /* __BRIDGE_H__ */

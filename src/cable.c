@@ -77,14 +77,17 @@ bool set(Node* this, int argc, char** argv) {
 	return true;
 }
 
-static void get(Node* this, FILE* fp) {
+static char* get(Node* this) {
 	Cable* cable = (Cable*)this;
 
-	fprintf(fp, "Activity   Bandwidth   Latency(Variant)   Jitter   Error Rate   Drop Rate\n");
-	fprintf(fp, "=========================================================================\n");
-	fprintf(fp, "%8s   %8lu   %6lu(%7lu)   %6.3f   %10.3f	%10.3f\n", 
+	char* result = (char*)malloc(512);
+	sprintf(result, "Activity   Bandwidth   Latency(Variant)   Jitter   Error Rate   Drop Rate\n");
+	sprintf(result, "%s=========================================================================\n", result);
+	sprintf(result, "%s%8s   %8lu   %6lu(%7lu)   %6.3f   %10.3f	%10.3f\n", result,
 			cable->is_active? "ON": "OFF", cable->bandwidth, 
 			cable->latency, cable->variant, cable->jitter, cable->error_rate, cable->drop_rate); 
+
+	return result;
 }
 
 typedef struct _Cable_Context {

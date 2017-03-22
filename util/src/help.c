@@ -5,6 +5,7 @@
 #include <node.h>
 
 #include <rpc_netemul.h>
+#include <util/vector.h>
 
 int main(int argc, char* argv[]) {
 	printf("*** Network Emulator Help ***\n");
@@ -25,13 +26,22 @@ int main(int argc, char* argv[]) {
 		exit(-1);
 	}
 
-	bool callback(char* result, void* context) {
+	bool callback(Vector* vector, void* context) {
+		printf("final\n=========\n");
 		RPC_NetEmulator* rpc = context;
-		printf("%s\n", result);
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) {
+			char* result = vector_iterator_next(&iter);
+			printf("%s", result);
+		}
+
+		vector_destroy(vector);
 		rpc_netemul_close(rpc);
 		exit(0);
 		return true;
 	}
+	printf("before rpc_help\n");
 
 	rpc_help(rpc, callback, rpc);
 	

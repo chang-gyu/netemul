@@ -12,6 +12,7 @@
 #include "input.h"
 #include "network.h"
 #include "ni.h"
+#include "bridge.h"
 
 static Manager* manager;
 
@@ -36,6 +37,7 @@ bool manager_init() {
 
 	cmd_init();
 	input_init();
+	bridge_init();
 
 //	 Internal emulation prepartion
 	manager->nodes = map_create(MAX_NODE_COUNT, map_string_hash, map_string_equals, NULL);

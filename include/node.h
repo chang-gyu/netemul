@@ -33,7 +33,7 @@ struct _Node {
 	bool	is_active;                              	///< current status of node.
 	void    (*destroy)(Node* this);				///< destroy function of node itself.
 	bool	(*set)(Node* this, int argc, char** argv); 
-	void    (*get)(Node* this, FILE* fp);
+	char*    (*get)(Node* this);
 };
 
 #endif /* __NODE_H__ */

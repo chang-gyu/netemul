@@ -29,16 +29,7 @@ static void usage(const char* cmd) {
 }
 
 static int cmd_exit(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-	ListIterator iter;
-	list_iterator_init(&iter, bridge_getlist());
-	while(list_iterator_has_next(&iter)) {
-		Br* br = list_iterator_next(&iter);
-		char* name = br->interface;
-		char command[64] = { 0, };
-		sprintf(command, "/sbin/ifconfig %s down", name);
-		system(command);
-		sprintf(command, "/sbin/brctl delbr %s", name);
-	}
+	bridge_destroy();
 
 	printf("Network Emulator Terminated ...\n");
 	printf("(Virtual Machines need to be turned off first)\n");
@@ -57,7 +48,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 			while(list_iterator_has_next(&iter)) {
 				Node* node = list_iterator_next(&iter);
-				node->get(node, stdout);
+				printf("%s", node->get(node));
 			}
 			printf("\n");
 		}
@@ -275,12 +266,17 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		///TODO: check eth0 is really exsited.
 		EndPoint* bridge = endpoint_create(1, NODE_TYPE_BRIDGE);
 		if(!bridge) {
-			printf("Phsical create failed\n");
+			printf("Bridge create failed:0\n");
 			return -1;
 		}
-		bridge_attach((Bridge*)bridge, argv[2]);
-
-		printf("New network bridge'%s' created.\n", bridge->name);
+		printf("debug\n");
+		if(!bridge_attach((Bridge*)bridge, argv[2])) {
+				printf("Bridge create failed:1\n");
+				Node* node = (Node*)bridge;
+				bridge->destroy(node);
+				return -1;
+		}
+		printf("New network bridge '%s' created.\n", bridge->name);
 		//"-p #portnumber"
 		//"-p"
 	} else if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
@@ -471,7 +467,7 @@ static int cmd_get(int argc, char** argv, void(*callback)(char* result, int exit
 		return -1;
 	}
 
-	node->get(node, stdout);
+	printf("%s", node->get(node));
 
 	return 0;
 }

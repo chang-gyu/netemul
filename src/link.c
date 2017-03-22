@@ -5,17 +5,20 @@
 #include "link.h"
 #include "manager.h"
 
-static void get(Node* this, FILE* fp) {
+static char* get(Node* this) {
+	char* result = (char*)malloc(128);
 	Link* link = (Link*)this;
 
 	Cable* cable = (Cable*)link->nodes[0];
 	Component* src = cable->in;
 	Component* dst = cable->out;
 
-	fprintf(fp, "\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/"); 
-	fprintf(fp, "\t\t-------------------------------\n");
-	fprintf(fp, "\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
+	sprintf(result, "\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/"); 
+	sprintf(result, "\t\t-------------------------------\n");
+	sprintf(result, "\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
 			cable->owner->name, (dst != NULL)? dst->name: "NULL");
+
+	return result;
 }
 
 static bool set(Node* this, int argc, char** argv) {	//set l0 latency: 10

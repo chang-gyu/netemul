@@ -5,9 +5,13 @@
 #include "composite.h"
 #include "manager.h"
 #include "cable.h"
+#include "bridge.h"
 
 static void destroy(Node* this) {
 	Composite* composite = (Composite*)this;
+	if(composite->type == NODE_TYPE_BRIDGE) {
+			_destroy(composite->name);
+	}
 	node_unregister(composite->name);	
 
 	if(composite->nodes) {
@@ -33,27 +37,31 @@ static bool set(Node* this, int argc, char** argv) {
 	return false;
 }
 
-static void get(Node* this, FILE* fp) {
+static char* get(Node* this) {
+	char* result = (char*)malloc(1024);
+
 	Composite* composite = (Composite*)this;
 
-	fprintf(fp, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
-	fprintf(fp, "\t\t-------------------------------\n");
-	fprintf(fp, "\t\t");
+	sprintf(result, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
+	sprintf(result, "\t\t-------------------------------\n");
+	sprintf(result, "\t\t");
 	for(int i = 0; i < composite->node_count; i++) {
-		fprintf(fp, "[%02d] ", i);
+		sprintf(result, "[%02d] ", i);
 	}
-	fprintf(fp, "\n");
+	sprintf(result, "\n");
 
-	fprintf(fp, "\t\t");
+	sprintf(result, "\t\t");
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
 		if(component->out) 
-			fprintf(fp, " %-4s", component->out->owner->name);
+			sprintf(result, " %-4s", component->out->owner->name);
 		else
-			fprintf(fp, " --  ");
+			sprintf(result, " --  ");
 	}
-	fprintf(fp, "\n\n");
+	sprintf(result, "\n\n");
+
+	return result;		//TODO malloc size check
 }
 
 bool composite_inherit(Composite* composite) {

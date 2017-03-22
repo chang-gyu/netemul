@@ -47,10 +47,17 @@ int main(int argc, char* argv[]) {
 		printf("Error: NetEmulator Connection fail %s:%s\n", host, _port);
 		exit(-1);
 	}
-
-	bool callback(char* result, void* context) {
+	
+	bool callback(Vector* vector, void* context) {
 		RPC_NetEmulator* rpc = context;
-		printf("%s\n", result);
+
+		VectorIterator iter;
+		vector_iterator_init(&iter, vector);
+		while(vector_iterator_has_next(&iter)) {
+			char* result = vector_iterator_next(&iter);
+			printf("%s", result);
+		}
+		vector_destroy(vector);
 		rpc_netemul_close(rpc);
 		exit(0);
 		return true;

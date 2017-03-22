@@ -18,11 +18,10 @@
 #include "sketch.h"
 #include "bridge.h"
 
-static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
-	char* stream;
-	size_t size;
-	FILE* fp = open_memstream(&stream, &size);
+static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)) {
+//	printf("src/rpc.c help_handler is called\n");
 
+	Vector* vector = vector_create(128, NULL);
         int command_len = 0;
 	for(int i = 0; commands[i].name != NULL; i++) {
 		int len = strlen(commands[i].name);
@@ -31,38 +30,48 @@ static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RP
 
 	for(int i = 0; commands[i].name != NULL; i++) {
 		// Name
-		fprintf(fp, "%s", commands[i].name);
+		char temp[128] = { 0, };
+		sprintf(temp, "%s%s", temp, commands[i].name);
+
 		int len = strlen(commands[i].name);
 		len = command_len - len + 2;
 		for(int j = 0; j < len; j++)
-			fputc(' ', fp);
-		
-		// Description
-		fprintf(fp, "%s\n", commands[i].desc);
+			sprintf(temp, "%s ", temp);
 
+		// Description
+		sprintf(temp, "%s%s\n", temp, commands[i].desc);
+		bool t = vector_add(vector, strdup(temp));
+		if(!t)
+			printf("helelfe\n");
+		
 		// Arguments
 		if(commands[i].args != NULL) {
+			memset(temp, 0, sizeof(temp));
 			for(int j = 0; j < command_len + 2; j++)
-				fputc(' ', fp);
+				sprintf(temp, "%s ", temp);
 
-			fprintf(fp, "%s\n", commands[i].args);
+			sprintf(temp, "%s%s\n", temp, commands[i].args);
+
+			t = vector_add(vector, strdup(temp));
+			if(!t)
+				printf("fdf\n");
 		}
 	}
 
-	fclose(fp);
-	callback(rpc, stream);
-	free(stream);
+	callback(rpc, vector);
+
+	vector_destroy(vector);
 }
 
 static void ifconfig_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
 	char buffer[8192] = {0, };
- 	FILE* fp = popen("/sbin/ifconfig &", "r");
- 	while(fgets(buffer + strlen(buffer), sizeof(buffer) - 1 - strlen(buffer), fp));
+	FILE* fp = popen("/sbin/ifconfig &", "r");
+	while(fgets(buffer + strlen(buffer), sizeof(buffer) - 1 - strlen(buffer), fp));
 	pclose(fp);
 	callback(rpc, buffer);
 }
 
-static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
+static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)) {
 	TreeNode* check_link(Node* node, List* list, TreeNode* parent, char* out_node) {
 		ListIterator iter;
 		list_iterator_init(&iter, list);
@@ -115,9 +124,11 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 		return NULL;
 	}
 
+	Vector* vector = vector_create(64, NULL);
+
 	List* composites = list_create(NULL);
 	if(!composites) { 
-		callback(rpc, "false");
+		callback(rpc, NULL);	//TODO
 		return;
 	}
 
@@ -131,7 +142,7 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 		if(node->type == NODE_TYPE_LINK) { 
 			if(!list_add(composites, node)) {
 				list_destroy(composites);
-				callback(rpc, "false");
+				callback(rpc, NULL);
 				return;
 			}
 		}
@@ -142,7 +153,7 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 	Node* node = get_node(node_name);
 	if(!node) {
 		list_destroy(composites);
-		callback(rpc, "false");
+		callback(rpc, NULL);
 		return;
 	}
 
@@ -157,100 +168,103 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 	sketch_render(fp);
 	tree_destroy(tree_get_root());
 	fclose(fp);
-	callback(rpc, stream);
+	callback(rpc, vector);
 	list_destroy(composites);
 	free(stream);
 }
 
-static void list_handler(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
-	char* stream;
-	size_t size;
-	FILE* fp = open_memstream(&stream, &size);
+static void list_handler(RPC_NetEmulator* rpc, uint8_t type, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)) {
+	Vector* vector = vector_create(128, NULL);
 
- 	bool list(int type) {
- 		void list_component(const char* device_name, List* list) {
- 			fprintf(fp, "\t%s\n", device_name);
- 			fprintf(fp, "\t=======================================\n");
- 			ListIterator iter;
- 			list_iterator_init(&iter, list);
- 
- 			while(list_iterator_has_next(&iter)) {
- 				Node* node = list_iterator_next(&iter);
- 				node->get(node, fp);
- 			}
- 			fprintf(fp, "\n");
- 		}
- 
- 		Manager* manager = get_manager();
- 
- 		MapIterator iter;
- 		map_iterator_init(&iter, manager->nodes);
- 
- 		List* components = list_create(NULL);
- 		if(!components)
- 			return false;
- 
- 		while(map_iterator_has_next(&iter)) {
- 			MapEntry* entry = map_iterator_next(&iter);
- 			Node* node = (Node*)entry->data;
- 		
- 			if(node->type == type)
- 				if(!list_add(components, node))
- 					return false;
- 		}
- 
- 		switch(type) {
- 			case NODE_TYPE_BRIDGE:
- 				list_component("Interface", components);
- 				break;
- 			case NODE_TYPE_HOST:
- 				list_component("Host", components);
- 				break;
- 			case NODE_TYPE_HUB_SWITCH:
- 				list_component("Hub Switch", components);
- 				break;
- 			case NODE_TYPE_ETHER_SWITCH:
- 				list_component("Ether Switch", components);
- 				break;
- 			case NODE_TYPE_LINK:
- 				list_component("Link", components);
- 				break;
- 		}
- 
- 		list_destroy(components);
- 
- 		return true;
- 	}
- 
- 	void label(const char* label) {
- 		fprintf(fp, "%s\n", label);
- 		fprintf(fp, "===============================================\n");
- 	}
- 
- 	if(type == NODE_TYPE_BRIDGE || type == NODE_TYPE_NONE) {
- 		label("Network bridges");
- 		list(NODE_TYPE_BRIDGE);
- 	}
- 	if(type == NODE_TYPE_HOST || type == NODE_TYPE_NONE) {
- 		label("Endpoint Devices");
- 		list(NODE_TYPE_HOST);
- 	}
- 	if(type == NODE_TYPE_HUB_SWITCH || type == NODE_TYPE_NONE) {
- 		label("Endpoint Devices");
- 		list(NODE_TYPE_HUB_SWITCH);
- 	}
- 	if(type == NODE_TYPE_ETHER_SWITCH || type == NODE_TYPE_NONE) {
- 		label("Hub Switch");
- 		list(NODE_TYPE_ETHER_SWITCH);
- 	}
- 	if(type == NODE_TYPE_LINK || type == NODE_TYPE_NONE) {
- 		label("Link");
- 		list(NODE_TYPE_LINK);
- 	}
+	bool list(int type, Vector* vector) {
+		void list_component(const char* device_name, List* list) {
+			char temp[128] = { 0, };
 
-	fclose(fp);
-	callback(rpc, stream);
-	free(stream);
+			sprintf(temp, "\t%s\n", device_name);
+			sprintf(temp, "\t=======================================\n");
+			ListIterator iter;
+			list_iterator_init(&iter, list);
+
+			while(list_iterator_has_next(&iter)) {
+				Node* node = list_iterator_next(&iter);
+				sprintf("%s%s\n", temp, node->get(node));
+			}
+			sprintf(temp, "\n");
+
+			vector_add(vector, strdup(temp));
+		}
+
+		Manager* manager = get_manager();
+
+		MapIterator iter;
+		map_iterator_init(&iter, manager->nodes);
+
+		List* components = list_create(NULL);
+		if(!components)
+			return false;
+
+		while(map_iterator_has_next(&iter)) {
+			MapEntry* entry = map_iterator_next(&iter);
+			Node* node = (Node*)entry->data;
+
+			if(node->type == type)
+				if(!list_add(components, node))
+					return false;
+		}
+
+		switch(type) {
+			case NODE_TYPE_BRIDGE:
+				list_component("Interface", components);
+				break;
+			case NODE_TYPE_HOST:
+				list_component("Host", components);
+				break;
+			case NODE_TYPE_HUB_SWITCH:
+				list_component("Hub Switch", components);
+				break;
+			case NODE_TYPE_ETHER_SWITCH:
+				list_component("Ether Switch", components);
+				break;
+			case NODE_TYPE_LINK:
+				list_component("Link", components);
+				break;
+		}
+
+		list_destroy(components);
+
+		return true;
+	}
+
+	void label(const char* label) {
+		char temp[128] = { 0, };
+		sprintf(temp, "%s\n", label);
+		sprintf(temp, "%s===============================================\n", temp);
+
+		vector_add(vector, strdup(temp));
+	}
+
+	if(type == NODE_TYPE_BRIDGE || type == NODE_TYPE_NONE) {
+		label("Network bridges");
+		list(NODE_TYPE_BRIDGE, vector);
+	}
+	if(type == NODE_TYPE_HOST || type == NODE_TYPE_NONE) {
+		label("Endpoint Devices");
+		list(NODE_TYPE_HOST, vector);
+	}
+	if(type == NODE_TYPE_HUB_SWITCH || type == NODE_TYPE_NONE) {
+		label("Endpoint Devices");
+		list(NODE_TYPE_HUB_SWITCH, vector);
+	}
+	if(type == NODE_TYPE_ETHER_SWITCH || type == NODE_TYPE_NONE) {
+		label("Hub Switch");
+		list(NODE_TYPE_ETHER_SWITCH, vector);
+	}
+	if(type == NODE_TYPE_LINK || type == NODE_TYPE_NONE) {
+		label("Link");
+		list(NODE_TYPE_LINK, vector);
+	}
+
+	callback(rpc, vector);
 }
 
 static void create_handler(RPC_NetEmulator* rpc, CreateSpec* spec, void* context, void(*callback)(RPC_NetEmulator* rpc, bool result)) {
@@ -387,28 +401,23 @@ static void set_handler(RPC_NetEmulator* rpc, char* node_name, uint8_t argc, cha
 	callback(rpc, true);
 }
 
-static void get_handler(RPC_NetEmulator* rpc, char* node_name, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
-	char* stream;
-	size_t size;
-	FILE* fp = open_memstream(&stream, &size);
+static void get_handler(RPC_NetEmulator* rpc, char* node_name, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)) {
+	Vector* vector = vector_create(64, NULL);
 
 	Node* node = get_node(node_name);
 	if(!node) {
-		fprintf(fp, "Node does not exist\n");
-		fclose(fp);
-		callback(rpc, stream);
-		free(stream);
+		vector_add(vector, "Node does not exist\n");
+		callback(rpc, vector);
 		return;
 	}
 
-	node->get(node, fp);
-	fclose(fp);
-	callback(rpc, stream);
-	free(stream);
+	vector_add(vector, node->get(node));
+	callback(rpc, vector);
 }
 
 static List* actives;
 RPC_NetEmulator* rpc;
+
 static bool manager_loop(void* context) {
 	RPC_NetEmulator* rpc_client = rpc_netemul_accept(rpc); //event busy
 	if(rpc_client) {
@@ -428,7 +437,7 @@ static bool manager_loop(void* context) {
 			}
 		}
 	}
-	
+
 	return true;
 }
 
@@ -453,10 +462,10 @@ int rpc_manager_init(void) {
 	rpc_on_handler(rpc, on_handler, NULL);
 	rpc_off_handler(rpc, off_handler, NULL);
 	rpc_set_handler(rpc, set_handler, NULL);
-	rpc_get_handler( rpc, get_handler, NULL);
+	rpc_get_handler(rpc, get_handler, NULL);
 
 	actives = list_create(NULL);
-	
+
 	event_busy_add(manager_loop, NULL); //event busy
 
 	return 0;

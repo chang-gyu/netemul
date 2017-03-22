@@ -1,12 +1,13 @@
 #include <stdio.h>
+#include <string.h>
 #include <util/list.h>
 #include <rpc_netemul.h>
 #include <unistd.h>
 
-static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
-	char buffer[8192];
-	sprintf(buffer, "help\n");
-	callback(rpc, buffer);
+static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, Vector* vector)) {
+	Vector* vector = vector_create(32, NULL);
+	vector_add(vector, strdup("help\n"));
+	callback(rpc, vector);
 }
 
 static void ifconfig_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RPC_NetEmulator* rpc, char* result)) {
