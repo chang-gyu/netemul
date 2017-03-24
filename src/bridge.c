@@ -39,7 +39,7 @@ void bridge_destroy() {
 		list_iterator_init(&iter, bridgeList);
 		while(list_iterator_next(&iter)) {
 				Br* br = list_iterator_next(&iter);
-				printf("name : %s\n", br->interface);
+//				printf("name : %s\n", br->interface);
 				_destroy(br->interface);
 		}
 }
@@ -78,7 +78,6 @@ bool bridge_attach(Bridge* bridge, char* name) {
 				printf("bridge list add failed\n");
 				return false;
 		}
-				printf("bridge list add\n");
 
 		char command[64] = { 0, };
 		sprintf(command, "/sbin/brctl addbr %s", bridge->name);
@@ -103,7 +102,7 @@ bool bridge_attach(Bridge* bridge, char* name) {
 
 EndPoint* bridge_create() {
 		Bridge* bridge = malloc(sizeof(Bridge));
-		if(!bridge) 
+		if(!bridge)
 				return NULL;
 
 		memset(bridge, 0x0, sizeof(Bridge));
@@ -116,14 +115,14 @@ EndPoint* bridge_create() {
 				goto failed;
 
 		/* Extends */
-		// nothing 
+		// nothing
 
 		/* Method overriding */
-		// nothing 
+		// nothing
 
 		return (EndPoint*)bridge;
 
 failed:
-		bridge->destroy((Node*)bridge); 
+		bridge->destroy((Node*)bridge);
 		return NULL;
 }

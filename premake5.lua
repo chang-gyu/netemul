@@ -3,6 +3,7 @@ workspace 'NetEmul'
 
 project 'netemul'
 	kind 'ConsoleApp'
+    targetdir "."
 
 	files 			{ 'src/**.c' }
 	includedirs 	{ 'sdk', 'include', 'librpc' }

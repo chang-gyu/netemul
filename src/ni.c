@@ -96,13 +96,13 @@ static TapInterface* tap_create(const char* name, int flags) {
 	char *dev = "/dev/net/tun";
 
 	if((fd = open(dev, O_RDWR)) < 0) {
-		perror("Cannot open TUN device"); 
+		perror("Cannot open TUN device");
 		exit(1);
 	}
 
 	memset(&ifr, 0, sizeof(ifr));
 
-	ifr.ifr_flags = flags;   
+	ifr.ifr_flags = flags;
 
 	if(*dev) {
 		strncpy(ifr.ifr_name, name, IFNAMSIZ);
@@ -119,18 +119,18 @@ static TapInterface* tap_create(const char* name, int flags) {
 		return NULL;
 
 	ti->fd = fd;
-	strcpy(ti->name, ifr.ifr_name);	
+	strcpy(ti->name, ifr.ifr_name);
 
 	// Set tap interface up
 	if(do_chflags(ifr.ifr_name, IFF_UP, IFF_UP) < 0) {
 		perror("Interface up failed\n");
-		exit(1);	
+		exit(1);
 	}
 
 	return ti;
 }
 
-static void tap_destroy(TapInterface* ti) { 
+static void tap_destroy(TapInterface* ti) {
 	close(ti->fd);
 	free(ti);
 	ti = NULL;
@@ -200,7 +200,7 @@ failed:
 }
 
 void ni_destroy(NI* ni) {
-#ifdef __LINUX 
+#ifdef __LINUX
 	fd_remove(ni->ti->fd);
 	tap_destroy(ni->ti);
 	free(ni);

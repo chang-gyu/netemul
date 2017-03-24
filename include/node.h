@@ -27,13 +27,13 @@ typedef enum {
 /* Node Interface */
 typedef struct _Node Node;
 struct _Node {
-	int     type;						///< type of node.
+	int     type;						    ///< type of node.
 #define MAX_NAME_LEN	8
 	char	name[MAX_NAME_LEN];				///< name of node.
-	bool	is_active;                              	///< current status of node.
-	void    (*destroy)(Node* this);				///< destroy function of node itself.
-	bool	(*set)(Node* this, int argc, char** argv); 
-	char*    (*get)(Node* this);
+	bool	is_active;                      ///< current status of node.
+	void    (*destroy)(Node* this);			///< destroy function of node itself.
+	bool	(*set)(Node* this, int argc, char** argv);
+    char*    (*get)(Node* this);
 };
 
 #endif /* __NODE_H__ */

@@ -32,7 +32,7 @@ static void help() {
 	printf("\t-s --script		: Script file path\n");
 }
 
-int main(int argc, char** argv) { 
+int main(int argc, char** argv) {
 	signal(SIGINT, (void*)signal_exit);
 
 	if(geteuid() != 0) {
@@ -42,18 +42,18 @@ int main(int argc, char** argv) {
 
 	/* Process option for program */
 	static const struct option options[] = {
-		{ 
+		{
 		.name = "help",
 		.val = 'h' },
-		{ 
-		.name = "version", 
+		{
+		.name = "version",
 		.val = 'v' },
-		{ 
-		.name = "script", 
-		.has_arg = required_argument, 
+		{
+		.name = "script",
+		.has_arg = required_argument,
 		.val = 's' },
-		{ 
-		0 
+		{
+		0
 		}
 	};
 
@@ -67,8 +67,8 @@ int main(int argc, char** argv) {
 				return 0;
 
 			case 'v':
-				printf("PacketNgin Network Emulator ver %d.%d.%d-%s\n", 
-						VERSION_MAJOR, VERSION_MINOR, 
+				printf("PacketNgin Network Emulator ver %d.%d.%d-%s\n",
+						VERSION_MAJOR, VERSION_MINOR,
 						VERSION_MICRO, VERSION_TAG);
 				return 0;
 
@@ -97,15 +97,15 @@ int main(int argc, char** argv) {
 	if(script) {
 		int fd = open(script, O_RDONLY);
 		if(fd < 0) {
-			perror("Cannot open script file"); 
+			perror("Cannot open script file");
 		} else {
-			command_process(fd);	
+			command_process(fd);
 			close(fd);
-		}	
+		}
 	}
 
 	/* Event machine start */
-	while(1) 
+	while(1)
 		event_loop();
 
 	return 0;
@@ -124,7 +124,7 @@ void destroy() {
 void gdestroy() {
 }
 
-int main(int argc, char** argv) { 
+int main(int argc, char** argv) {
 	printf("Thread %d booting\n", thread_id());
 
 	if(thread_id() == 0) {
@@ -143,13 +143,13 @@ int main(int argc, char** argv) {
 	printf("\nWelcome to PacketNgin Network Emulator\n\n");
 
 	/* Event machine start */
-	while(1) 
+	while(1)
 		event_loop();
 
 	thread_barrior();
 
 	destory();
-	
+
 	thread_barrior();
 
 	if(thread_id() == 0) {

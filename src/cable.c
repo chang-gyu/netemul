@@ -3,7 +3,7 @@
 #include <math.h>		// For stdev(sqrt, log, cos, sin)
 #include <values.h>		// For stdev(DBL_MIN)
 
-#include <malloc.h>		// For printf 
+#include <malloc.h>		// For printf
 
 #include <timer.h>
 #include <util/types.h>
@@ -84,8 +84,8 @@ static char* get(Node* this) {
 	sprintf(result, "Activity   Bandwidth   Latency(Variant)   Jitter   Error Rate   Drop Rate\n");
 	sprintf(result, "%s=========================================================================\n", result);
 	sprintf(result, "%s%8s   %8lu   %6lu(%7lu)   %6.3f   %10.3f	%10.3f\n", result,
-			cable->is_active? "ON": "OFF", cable->bandwidth, 
-			cable->latency, cable->variant, cable->jitter, cable->error_rate, cable->drop_rate); 
+			cable->is_active? "ON": "OFF", cable->bandwidth,
+			cable->latency, cable->variant, cable->jitter, cable->error_rate, cable->drop_rate);
 
 	return result;
 }

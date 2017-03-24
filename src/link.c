@@ -18,6 +18,10 @@ static char* get(Node* this) {
 	sprintf(result, "\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
 			cable->owner->name, (dst != NULL)? dst->name: "NULL");
 
+
+    cable->get((Node*)link->nodes[0]);
+    cable->get((Node*)link->nodes[1]);
+
 	return result;
 }
 

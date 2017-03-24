@@ -54,7 +54,7 @@ bool manager_init() {
 }
 
 #ifndef __LINUX
-static char* str[] = { ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", 
+static char* str[] = { ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7",
 					   ".8", ".9", ".10", ".11", ".12", ".13", ".14", ".15" };
 #endif
 
@@ -76,8 +76,8 @@ bool node_register(Composite* node, char* name) {
 
 void node_unregister(char* name) {
 	Composite* node = map_remove(manager->nodes, name);
-	
-	for(int i = 0; i < node->node_count; i++) 
+
+	for(int i = 0; i < node->node_count; i++)
 		list_remove_data(manager->components, node->nodes[i]);
 }
 
@@ -89,14 +89,14 @@ Node* get_node(char* name) {
 	char* index_str = strtok(NULL, ".");
 
 	/* Component node get */
-	if(index_str) {			
+	if(index_str) {
 		if(!is_uint8(index_str)) {
 			printf("Port index must be number\n");
 			return NULL;
-		}	
+		}
 
 		Composite* composite = (Composite*)map_get(manager->nodes, temp);
-		if(!composite) 
+		if(!composite)
 			return NULL;
 
 		int index = parse_uint8(index_str);
@@ -104,10 +104,10 @@ Node* get_node(char* name) {
 			printf("Port index '%d' does not exist\n", index);
 			return NULL;
 		}
-		
+
 		return (Node*)composite->nodes[index];
 	/* Composite node get */
-	} else {				
+	} else {
 		return (Node*)map_get(manager->nodes, temp);
 	}
 }
@@ -119,7 +119,7 @@ static void update_fd_info() {
 	fd_set read_fds;
 	FD_ZERO(&read_fds);
 
-	for(int i = 0; i < list_size(fds); i++) 
+	for(int i = 0; i < list_size(fds); i++)
 		FD_SET((int64_t)list_get(fds, i), &read_fds);
 
 	manager->read_fds = read_fds;
@@ -156,8 +156,8 @@ NI* port_attach(EndPointPort* port) {
 	if(!ni)
 		return NULL;
 
-	// NOTE: fd is same as network interface index.	
-	int fd = ni->ti->fd;	
+	// NOTE: fd is same as network interface index.
+	int fd = ni->ti->fd;
 	manager->nis[fd] = ni;
 	port->fd = fd;
 
@@ -173,7 +173,7 @@ NI* port_attach(EndPointPort* port) {
 			break;
 		}
 	}
-#endif 	
+#endif
 	return ni;
 }
 

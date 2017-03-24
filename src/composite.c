@@ -12,7 +12,7 @@ static void destroy(Node* this) {
 	if(composite->type == NODE_TYPE_BRIDGE) {
 			_destroy(composite->name);
 	}
-	node_unregister(composite->name);	
+	node_unregister(composite->name);
 
 	if(composite->nodes) {
 		// NOTE: node_count decreased in destroy.
@@ -42,7 +42,7 @@ static char* get(Node* this) {
 
 	Composite* composite = (Composite*)this;
 
-	sprintf(result, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
+	sprintf(result, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/");
 	sprintf(result, "%s\t\t-------------------------------\n\t\t", result);
 	for(int i = 0; i < composite->node_count; i++) {
 		sprintf(result, "%s[%02d] ", result, i);
@@ -53,7 +53,7 @@ static char* get(Node* this) {
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
-		if(component->out) 
+		if(component->out)
 			sprintf(result, "%s %-4s", result, component->out->owner->name);
 		else
 			sprintf(result, "%s --  ", result);
@@ -67,7 +67,7 @@ bool composite_inherit(Composite* composite) {
 	composite->is_active = true;
 	composite->destroy = destroy;
 	composite->set = set;
-	composite->get = get; 
+	composite->get = get;
 
 	composite->nodes = malloc(sizeof(Node*) * composite->node_count);
 	if(!composite->nodes)
@@ -109,10 +109,10 @@ bool composite_inherit(Composite* composite) {
 				 * latency	: 0 (No delay).
 				 */
 				composite->nodes[i] = (Component*)cable_create(1000000000, 0, 0, 0);
-						
+
 				if(!composite->nodes[i])
 					return false;
-				
+
 				composite->nodes[i]->owner = composite;
 			}
 			break;

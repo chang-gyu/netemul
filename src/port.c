@@ -16,7 +16,7 @@ Port* _port_create() {
 	if(!component_inherit((Component*)port))
 		goto failed;
 
-	/* Extends */ 
+	/* Extends */
 	// Nothing
 
 	/* Method overriding */
@@ -34,7 +34,7 @@ Port* port_create(int type) {
 	switch(type) {
 		case NODE_TYPE_PORT:
 			return _port_create();
-		
+
 		case NODE_TYPE_END_PORT:
 			return endpoint_port_create();
 

@@ -14,7 +14,7 @@ uint32_t tree_get_count() {
 }
 
 void tree_init() {
-	root = NULL;	
+	root = NULL;
 	count = 0;
 	return;
 }
@@ -25,9 +25,10 @@ static TreeNode* _add(TreeNode* parent, void* data) {
 	node->self = data;
 	node->parent = parent;
 	node->count = 0;
+
 	for(int i = 0; i < MAX_CHILDRUN_COUNT; i++) {
 		node->children[i] = NULL;
-	}	
+	}
 
 	return node;
 }
@@ -95,8 +96,8 @@ static void _destroy(TreeNode* tree) {
 	for(int i = 0; i < MAX_CHILDRUN_COUNT; i++) {
 		if(tree->children[i] != NULL) {
 			_destroy(tree->children[i]);
-		} 
-	}
+		}
+    }
 	if(tree == NULL)
 		return;
 	count--;

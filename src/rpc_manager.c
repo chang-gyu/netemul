@@ -41,7 +41,7 @@ static void help_handler(RPC_NetEmulator* rpc, void* context, void(*callback)(RP
 		bool t = vector_add(vector, strdup(temp));
 		if(!t)
 			printf("helelfe\n");
-		
+
 		// Arguments
 		if(commands[i].args != NULL) {
 			memset(temp, 0, sizeof(temp));
@@ -89,7 +89,7 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 				for(int j = 0; j < link->node_count; j++) {
 					Cable* cable = (Cable*)link->nodes[j];
 
-					if(!strcmp(temp, cable->in->name)) { 
+					if(!strcmp(temp, cable->in->name)) {
 						//	TreeNode* rtn = tree_add(parent, link);
 						list_remove_data(list, link);
 						strcpy(out_node, cable->out->name);
@@ -98,7 +98,7 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 					}
 				}
 			}
-		} 
+		}
 		return NULL;
 	}
 
@@ -110,11 +110,11 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 			if(!rtn) {
 				break;
 			} else {
-				char temp[8];	
+				char temp[8];
 				memcpy(temp, out_node_name, strlen(out_node_name) + 1);
 				strtok(temp, ".");
 
-				Node* out_node = get_node(temp);	
+				Node* out_node = get_node(temp);
 				TreeNode* tree = tree_add(rtn, out_node);
 				check_node(out_node, list, tree);
 			}
@@ -125,7 +125,7 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 	Vector* vector = vector_create(128, NULL);
 
 	List* composites = list_create(NULL);
-	if(!composites) { 
+	if(!composites) {
 		callback(rpc, NULL);	//TODO
 		return;
 	}
@@ -137,7 +137,7 @@ static void tree_handler(RPC_NetEmulator* rpc, char* node_name, void* context, v
 		MapEntry* entry = map_iterator_next(&iter);
 		Node* node = (Node*)entry->data;
 
-		if(node->type == NODE_TYPE_LINK) { 
+		if(node->type == NODE_TYPE_LINK) {
 			if(!list_add(composites, node)) {
 				list_destroy(composites);
 				callback(rpc, NULL);
