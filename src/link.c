@@ -5,19 +5,38 @@
 #include "link.h"
 #include "manager.h"
 
-static void get(Node* this) {
+static char* get(Node* this) {
+	char* result = (char*)malloc(128);
 	Link* link = (Link*)this;
 
 	Cable* cable = (Cable*)link->nodes[0];
 	Component* src = cable->in;
 	Component* dst = cable->out;
 
-	printf("\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/"); 
-	printf("\t\t-------------------------------\n");
-	printf("\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
+	sprintf(result, "\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/"); 
+	sprintf(result, "\t\t-------------------------------\n");
+	sprintf(result, "\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
 			cable->owner->name, (dst != NULL)? dst->name: "NULL");
+
+
+    cable->get((Node*)link->nodes[0]);
+    cable->get((Node*)link->nodes[1]);
+
+	return result;
 }
 
+static bool set(Node* this, int argc, char** argv) {	//set l0 latency: 10
+	Link* link = (Link*)this;
+
+	Cable* cable = (Cable*)link->nodes[0];
+	if(!cable->set((Node*)cable, argc, argv))
+		return false;
+
+	cable = (Cable*)link->nodes[1];
+	if(!cable->set((Node*)cable, argc, argv))
+		return false;
+	return true;
+}
 /**
  * Find out node is available for connecting.
  * 
@@ -95,6 +114,7 @@ static Link* _link_create(Node* source, Node* destination) {
 	
 	/* Method overriding */
 	link->get = get;
+	link->set = set;
 
 	return link;
 
@@ -115,12 +135,20 @@ Link* link_create(Node* source, Node* destination) {
 
 	/* Register link to network emulator manager */
 	bool result = false;
+
 	for(int i = 0; i < MAX_NODE_COUNT; i++) {
+#ifdef __LINUX
 		sprintf(&name[1], "%d", i);
-		
+#else
+		static char st = '0';
+		strcpy(&name[1], &st);		
+		st =+ 1;
+#endif
+
 		if(!get_node(name)) {
 			result = node_register((Composite*)link, name);
 			break;
+
 		}
 	}
 

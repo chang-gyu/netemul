@@ -6,6 +6,6 @@
  *
  * @param file descriptor of input source. (e.g stdio)
  */
-void command_process(int fd);
+void command_process(int fd);		//only use for linux
 
 #endif /* __COMMAND_H__ */

@@ -13,6 +13,11 @@
 #include "switch.h"
 #include "endpoint.h"
 #include "host.h"
+#include "tree.h"
+#include "sketch.h"
+#include "bridge.h"
+
+// Ctrl + C -> needs event handler.
 
 static void usage(const char* cmd) {
 	printf("\nUsage :\n");
@@ -24,6 +29,8 @@ static void usage(const char* cmd) {
 }
 
 static int cmd_exit(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
+	bridge_destroy();
+
 	printf("Network Emulator Terminated ...\n");
 	printf("(Virtual Machines need to be turned off first)\n");
 	exit(0);
@@ -41,7 +48,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 			while(list_iterator_has_next(&iter)) {
 				Node* node = list_iterator_next(&iter);
-				node->get(node);
+				printf("%s", node->get(node));
 			}
 			printf("\n");
 		}
@@ -60,11 +67,16 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 			Node* node = (Node*)entry->data;
 		
 			if(node->type == type)
-				if(!list_add(components, node))
+				if(!list_add(components, node)) {
+					list_destroy(components);
 					return false;
+				}
 		}
 
 		switch(type) {
+			case NODE_TYPE_BRIDGE:
+				list_component("Bridge", components);
+				break;
 			case NODE_TYPE_HOST:
 				list_component("Host", components);
 				break;
@@ -94,7 +106,12 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 	
 	if(argc == 2) {
-		if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
+		if((strcmp(argv[1], "-b") == 0) || (strcmp(argv[1], "bridge") == 0)) {
+			label("Network bridges");
+			if(!list(NODE_TYPE_BRIDGE))
+				return -1;
+
+		} else if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
 			label("Endpoint Devices");
 			if(!list(NODE_TYPE_HOST))
 				return -1;
@@ -118,6 +135,10 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 			return CMD_STATUS_NOT_FOUND;
 		}
 	} else {
+		label("Network bridges");
+		if(!list(NODE_TYPE_BRIDGE))
+			return -1;
+
 		label("Endpoint Devices");
 		if(!list(NODE_TYPE_HOST))
 			return -1;
@@ -128,7 +149,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 		if(!list(NODE_TYPE_ETHER_SWITCH))
 			return -1;
-		
+
 		label("Link");
 		if(!list(NODE_TYPE_LINK))
 			return -1;
@@ -138,23 +159,137 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 	return 0;
 }
-	
+
+static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
+	TreeNode* check_link(Node* node, List* list, TreeNode* parent, char* out_node) {
+		char temp[8];
+		if(node->type < 100)
+			return NULL;
+
+		Composite* _composite = (Composite*)node;
+
+		ListIterator iter;
+		list_iterator_init(&iter, list);
+		while(list_iterator_has_next(&iter)) {
+			Link* link = list_iterator_next(&iter);
+
+			for(int i = 0; i < _composite->node_count; i++) {
+				memset(temp, 0, sizeof(temp));
+				sprintf(temp, "%s.%d", _composite->name, i);
+				for(int j = 0; j < link->node_count; j++) {
+					Cable* cable = (Cable*)link->nodes[j];
+
+					if(!strcmp(temp, cable->in->name)) { 
+						//TreeNode* rtn = tree_add(parent, link);
+						list_remove_data(list, link);
+						strcpy(out_node, cable->out->name);
+						//return rtn;
+						return parent;
+					}
+				}
+			}
+		} 
+		return NULL;
+	}
+
+	char* check_node(Node* node, List* list, TreeNode* parent) {
+		Composite* composite = (Composite*)node;
+		for(int i = 0; i < composite->node_count; i++) {
+			char out_node_name[8];
+			TreeNode* rtn = check_link(get_node(node->name), list, parent, out_node_name);
+			if(!rtn) {
+				break;
+			} else {
+				char temp[8];	
+				memcpy(temp, out_node_name, strlen(out_node_name) + 1);
+				strtok(temp, ".");
+
+				Node* out_node = get_node(temp);	
+				TreeNode* tree = tree_add(rtn, out_node);
+				check_node(out_node, list, tree);
+			}
+		}
+		return NULL;
+	}
+
+	if(argc != 2)
+		return CMD_STATUS_WRONG_NUMBER;
+
+	Manager* manager = get_manager();
+
+	MapIterator iter;
+	map_iterator_init(&iter, manager->nodes);	//composite iter.
+
+	List* composites = list_create(NULL);
+	if(!composites)
+		return false;
+
+	while(map_iterator_has_next(&iter)) {
+		MapEntry* entry = map_iterator_next(&iter);
+		Node* node = (Node*)entry->data;
+
+		if(node->type == NODE_TYPE_LINK)
+			if(!list_add(composites, node)) {
+				list_destroy(composites);
+				return -1;
+			}
+	}
+
+	tree_init();
+
+	Node* node = get_node(argv[1]);
+	if(!node) {
+		usage(argv[0]);
+		printf("Node '%s' does not exist\n", argv[1]);
+		list_destroy(composites);
+		return -1;
+	}
+
+	TreeNode* this = tree_add(tree_get_root(), node);
+	check_node(node, composites, this);
+
+	sketch(tree_get_root(), 0, 0);
+	printf("%s", sketch_render());
+	tree_destroy(tree_get_root());
+	list_destroy(composites);
+
+	return 0;
+}
+
 static int cmd_create(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
 	if(!((argc >= 2) && (argc <= 4))) { 
 		return CMD_STATUS_WRONG_NUMBER;
 	}
 
-	if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
-		int port_count = DEFAULT_HOST_PORT_COUNT;
+	//"-b eth0"
+	if((strcmp(argv[1], "-b") == 0) || (strcmp(argv[1], "bridge") == 0)) {
+		///TODO: check eth0 is really exsited.
+		EndPoint* bridge = endpoint_create(1, NODE_TYPE_BRIDGE);
+		if(!bridge) {
+			printf("Bridge create failed:0\n");
+			return -1;
+		}
+		printf("debu1\n");
+		if(!bridge_attach((Bridge*)bridge, argv[2])) {
+				printf("Bridge create failed:1\n");
+				Node* node = (Node*)bridge;
+				bridge->destroy(node);
+				return -1;
+		}
+		printf("New network bridge '%s' created.\n", bridge->name);
+		//"-p #portnumber"
+		//"-p"
+	} else if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "host") == 0)) {
+		int port_count = DEFAULT_HOST_PORT_COUNT;   //  default value : 1
 
 		if(argc == 3) {
 			if(!is_uint32(argv[2])) {
 				printf("Port count must to be number\n");
 				return -1;
 			}
-			
+
 			port_count = parse_uint32(argv[2]);
-			
+
 			if(port_count > MAX_COMPONENT_COUNT) {
 				printf("Cannot make too many ports '%d'\n", port_count);
 				return -1;
@@ -168,7 +303,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		}
 
 		printf("New host device '%s' created\n", host->name);
-		cmd_update_var(host->name, 0);
+		//"-l str1 str2"
 	} else if((strcmp(argv[1], "-l") == 0) || (strcmp(argv[1], "link") == 0)) {
 		if(argc != 4) {
 			return CMD_STATUS_WRONG_NUMBER;
@@ -176,17 +311,17 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 
 		Node* source = get_node(argv[2]);
 		Node* destination = get_node(argv[3]);
-		
+
 		if(!source) {
 			printf("Node '%s' does not exist\n", argv[2]);
 			return -1;
 		}
-		
+
 		if(!destination) {
 			printf("Node '%s' does not exist\n", argv[3]);
 			return -1;
 		}
-		
+
 		Link* link = link_create(source, destination);
 		if(!link) {
 			printf("Link create failed\n");
@@ -194,16 +329,17 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		}
 
 		printf("New link '%s' created\n", link->name);
-		cmd_update_var(link->name, 0);
+		//-s #portnumber"
+		//-s"
 	} else if((strcmp(argv[1], "-s") == 0) || (strcmp(argv[1], "switch") == 0)) {
 		int port_count = DEFAULT_SWITCH_PORT_COUNT;
-		
+
 		if(argc == 3) {
 			if(!is_uint32(argv[2])) {
 				printf("Port count must to be number\n");
 				return -1;
 			}
-			
+
 			port_count = parse_uint32(argv[2]);
 			if(port_count > MAX_COMPONENT_COUNT) {
 				printf("Cannot make too many ports '%d'\n", port_count);
@@ -218,7 +354,6 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		}
 
 		printf("New switch '%s' created\n", s->name);
-		cmd_update_var(s->name, 0);
 	} else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "hub") == 0)) {
 		int port_count = DEFAULT_SWITCH_PORT_COUNT;
 
@@ -227,14 +362,14 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 				printf("Port count must to be number\n");
 				return -1;
 			}
-			
+
 			port_count = parse_uint32(argv[2]);
 			if(port_count > MAX_COMPONENT_COUNT) {
 				printf("Cannot make too many ports '%d'\n", port_count);
 				return -1;
 			}
 		}
-	
+
 		Switch* s = switch_create(port_count, NODE_TYPE_HUB_SWITCH);
 		if(!s) {
 			printf("Hub create failed\n");
@@ -242,12 +377,10 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 		} 
 
 		printf("New switch '%s' created\n", s->name);
-		cmd_update_var(s->name, 0);
 	} else {
-		usage(argv[0]);
 		return CMD_STATUS_NOT_FOUND;
 	}
- 
+
 	return 0;
 }
 
@@ -272,6 +405,7 @@ static int cmd_activate(int argc, char** argv, void(*callback)(char* result, int
 	if(argc < 2)
 		return CMD_STATUS_WRONG_NUMBER;
 
+	//on str
 	Node* node = get_node(argv[1]);
 	if(!node) {
 		usage(argv[0]);
@@ -333,10 +467,19 @@ static int cmd_get(int argc, char** argv, void(*callback)(char* result, int exit
 		return -1;
 	}
 
-	node->get(node);
+	printf("%s", node->get(node));
 
 	return 0;
 }
+
+static int cmd_ifconfig(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
+	if(argc != 1)
+		return CMD_STATUS_WRONG_NUMBER;
+
+	system("/sbin/ifconfig");
+	return 0;
+}
+
 
 Command commands[] = {
 	{ 
@@ -354,6 +497,17 @@ Command commands[] = {
 		.desc = "Show node list", 
 		.args = "[NODE_TYPE]",
 		.func = cmd_list
+	},
+	{
+		.name = "ifconfig",
+		.desc = "Show network interfaces",
+		.func = cmd_ifconfig
+	},
+	{
+		.name = "tree",
+		.desc = "Show topology of node (which has the greatest number of node in default)",
+		.args = "[NODE]",
+		.func = cmd_tree
 	},
 	{
 		.name = "create",
@@ -396,12 +550,13 @@ Command commands[] = {
 	}
 };
 
+//not used in packetngin
 static int execute_cmd(char* line, bool is_dump) {
 	// if is_dump == true then file cmd
 	//    is_dump == false then stdin cmd
 	if(is_dump == true)
 		printf("%s\n", line);
-	
+
 	int exit_status = cmd_exec(line, NULL);
 
 	if(exit_status != 0) {
@@ -425,6 +580,8 @@ static int execute_cmd(char* line, bool is_dump) {
 
 #define MAX_LINE_SIZE		2048
 
+
+//not used in packetngin
 void command_process(int fd) {
 	char line[MAX_LINE_SIZE] = {0, };
 	char* head;
@@ -437,7 +594,7 @@ void command_process(int fd) {
 			if(line[seek] == '\n') {
 				line[seek] = '\0';
 				int ret = execute_cmd(head, fd != STDIN_FILENO);
-				
+
 				if(ret == 0) {
 					head = &line[seek] + 1;
 				} else { 
@@ -450,7 +607,7 @@ void command_process(int fd) {
 			printf("Command line is too long %d > %d\n", eod, MAX_LINE_SIZE);
 			eod = 0;
 			return;
-		 } else { // Unfound '\n' and seek != 0
+		} else { // Unfound '\n' and seek != 0
 			memmove(line, head, eod - (head - line));
 			eod -= head - line;
 			seek = eod;

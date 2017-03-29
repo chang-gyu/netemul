@@ -1,8 +1,14 @@
 #include <stdio.h>
+#include <string.h>
+#include <readline.h>
 #include <unistd.h>
 #include <malloc.h>
 
+#include <util/cmd.h>
 #include <util/event.h>
+#include <net/nic.h>
+#include <net/udp.h>
+#include <net/packet.h>
 
 #include "manager.h"
 #include "command.h"
@@ -12,9 +18,9 @@
 #define PACKET_BUF_SIZE		2048	
 
 static bool input_process(void* context) {
-	/* Start CLI & packet processing */
 	Manager* manager = get_manager();
 
+#ifdef __LINUX
 	struct timeval tv;
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
@@ -48,15 +54,51 @@ static bool input_process(void* context) {
 			}
 		}
 	} 
+#else
+	uint32_t i = 0;
+	uint32_t count = nic_count();
+	for(i = 0; i < count; i++) {
+		if(manager->nis[i]->used == 0)
+			continue;
+
+		NIC* nic = nic_get(i);
+		if(nic_has_input(nic)) {
+			Packet* packet = nic_input(nic);
+
+			// NOTE: fd is same as network interface index. 
+			EndPointPort* port = manager->nis[i]->port;
+			network_process(port, packet);
+		}
+	}
+#endif
 
 	return true;
 }
 
+#ifndef __LINUX
+static bool cli_process(void* context) {
+	char *name = readline();
+	if(!name)
+		return true;
+	else {
+		int len = strlen(name);
+		if(len > 0) {
+			cmd_exec(name, NULL);
+			fflush(stdout);
+		}
+	}
+	return true;
+}
+#endif
+
 bool input_init() {
+	/* Commands & packet input processing */
+#ifdef __LINUX
 	if(!fd_add(STDIN_FILENO))
 		return false;
-
-	/* Commands & packet input processing */
+#else
+	event_busy_add(cli_process, NULL);
+#endif
 	event_busy_add(input_process, NULL);
 
 	return true;

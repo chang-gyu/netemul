@@ -20,7 +20,7 @@ typedef struct {
 } MACTableEntity;
 
 /* Show MAC filtering table */
-static void list_table(EtherSwitch* s) {
+static char* list_table(EtherSwitch* s) {
 	int get_portnum(Port* port) {
 		for(int i = 0; i < s->node_count; i++) {
 			if(!s->nodes[i])
@@ -33,11 +33,12 @@ static void list_table(EtherSwitch* s) {
 		return -1;
 	}
 
+	char* result = (char*)malloc(1024);
 	CacheIterator iter;
 	cache_iterator_init(&iter, s->table);
-	printf("\t\tMAC Filtering Table\n");
-	printf("\t\t============================================\n");
-	printf("\t\tPort\tMAC\t\t\tAgeing Timer\n");
+	sprintf(result, "\t\tMAC Filtering Table\n");
+	sprintf(result, "\t\t============================================\n");
+	sprintf(result, "\t\tPort\tMAC\t\t\tAgeing Timer\n");
 
 	while(cache_iterator_has_next(&iter)) {
 		MACTableEntity* entity= cache_iterator_next(&iter);
@@ -51,10 +52,12 @@ static void list_table(EtherSwitch* s) {
 		for(int i = 0; i < 6; i++) 
 			mac[i] = (entity->mac >> (5 - i) * 8) & 0xff;
 
-		printf("\t\t%4d\t%02x:%02x:%02x:%02x:%02x:%02x \t%04f\n", get_portnum(port),
+		sprintf(result, "\t\t%4d\t%02x:%02x:%02x:%02x:%02x:%02x \t%04f\n", get_portnum(port),
 				mac[5], mac[4], mac[3], mac[2], mac[1], mac[0], (double)ageing);
 	}
-	printf("\n");
+	sprintf(result, "\n");
+
+	return result;
 }
 
 /* Update entities of MAC filtering table */
@@ -93,36 +96,41 @@ static bool update_table(Cache* table, Packet* packet, Port* port) {
 				}
 			}
 		}
+		entity->port = port;	//If port is changed, renew port.
 	}
 	
 	return true;
 }
 
-static void get(Node* this) {
+static char* get(Node* this) {
 	Composite* composite = (Composite*)this;
+	
+	char* result = (char*)malloc(1024);
+	memset(result, 0, 1024);
 
-	printf("\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
-	printf("\t\t-------------------------------\n");
-	printf("\t\t");
+	sprintf(result, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
+	sprintf(result, "%s\t\t-------------------------------\n", result);
+	sprintf(result, "%s\t\t", result);
 	for(int i = 0; i < composite->node_count; i++) {
-		printf("[%02d] ", i);
+		sprintf(result, "%s[%02d] ", result, i);
 	}
-	printf("\n");
+	sprintf(result, "%s\n", result);
 
-	printf("\t\t");
+	sprintf(result, "%s\t\t", result);
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
 		if(component->out) 
-			printf(" %-4s", component->out->owner->name);
+			sprintf(result, "%s %-4s", result, component->out->owner->name);
 		else
-			printf(" --  ");
+			sprintf(result, "%s --  ", result);
 	}
-	printf("\n");
-	printf("\n");
+	sprintf(result, "%s\n\n", result);
 
 	/* Overriding part */
-	list_table((EtherSwitch*)composite);
+	sprintf(result, "%s%s", result, list_table((EtherSwitch*)composite));
+
+	return result;
 }
 
 static void ether_switch_send(Component* this, Packet* packet) {
@@ -157,6 +165,7 @@ static void ether_switch_send(Component* this, Packet* packet) {
 	return;
 	
 failed:
+	//TODO: packetngin nic_free apply.
 	free(packet);
 }
 

@@ -35,12 +35,20 @@ static void send(Component* this, Packet* packet) {
 	EndPointPort* port = (EndPointPort*)this;
 
 	if(!port->is_active || !port->owner->is_active) {
-		free(packet);
+		free_func(packet);
 		return;
 	}
 
+#ifdef __LINUX 
 	write(port->fd, packet->buffer, packet->end - packet->start);
-	free(packet);
+	free_func(packet);
+#else
+	NIC* nic = port->ni->nic;
+	if(!nic_output(nic, packet)) 
+		free_func(packet);
+#endif
+
+	return;
 }
 
 Port* endpoint_port_create() {

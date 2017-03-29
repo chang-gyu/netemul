@@ -12,17 +12,20 @@
  * Network emulator manager.
  */
 typedef struct {
-#define MAX_NI_COUNT	1024
+#define MAX_NI_COUNT	1024		//packetngin 32
 	NI*	nis[MAX_NI_COUNT];
+	int nic_count;			///< The number of used nic.
 
-#define MAX_NODE_COUNT	2048
+#define MAX_NODE_COUNT	2048		//packetngin 64	
 	Map*	nodes;			///< All composite of network emulator (Key: name, Value: pointer of node).
 	List*	components;		///< All components of network emulator.
-
+	
+#ifdef __LINUX
 	List*	fds;			///< Stdin & Tap interface descriptor.
 	int	fd_count;
 	int	nfds;
 	fd_set	read_fds;
+#endif
 } Manager;
 
 bool manager_init();

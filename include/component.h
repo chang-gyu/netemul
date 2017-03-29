@@ -23,4 +23,7 @@ struct _Component{
 
 bool component_inherit(Component* component); 
 
+
+void (*free_func)(void*);
+
 #endif /* __COMPONENT_H__ */

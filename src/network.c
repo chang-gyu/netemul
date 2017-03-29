@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <malloc.h>
 
 #include <net/packet.h>
@@ -8,13 +9,14 @@
 #include "manager.h"
 #include "composite.h"
 
+//static int debug = 0;
 void network_process(EndPointPort* port, Packet* packet) {
 	if(!port->is_active || !port->owner->is_active) 
 		goto failed;
 
 	if(!port->out) 
 		goto failed;
-
+	
 #ifdef NET_CONTROL
 	if(!fifo_push(port->out->queue, packet)) 
 		goto failed;
@@ -25,7 +27,7 @@ void network_process(EndPointPort* port, Packet* packet) {
 	return;
 
 failed:
-	free(packet);
+	free_func(packet);
 }
 
 

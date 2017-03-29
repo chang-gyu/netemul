@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "endpoint.h"
 #include "manager.h"
 #include "host.h"
+#include "bridge.h"
 
 EndPoint* endpoint_create(int port_count, int type) {
 	EndPoint* end;
@@ -13,18 +16,32 @@ EndPoint* endpoint_create(int port_count, int type) {
 				return NULL;
 
 			name = end->name;
-			name[0] = 'p'; // 'Pc'
+			name[0] = 'p'; // 'hc'
 			break;
+		case NODE_TYPE_BRIDGE:
+			if(!(end = bridge_create()))  
+				return NULL;
+			name = end->name;
+			name[0] = 'b'; // 'bc'
+			break;
+			
 
 		default:
 			return NULL;
 	}
 
-	/* Register endpoint to network emulator manager */
+#ifndef __LINUX
+#include <net/nic.h>
+	Manager* manager = get_manager();
+	if(nic_count() < manager->nic_count + port_count)
+		goto failed;
+#endif
 	bool result = false;
+	/* Register endpoint to network emulator manager */
+
 	for(int i = 0; i < MAX_NODE_COUNT; i++) {
 		sprintf(&name[1], "%d", i);
-		
+
 		if(!get_node(name)) {
 			if(!node_register((Composite*)end, name))
 				break;
@@ -39,7 +56,6 @@ EndPoint* endpoint_create(int port_count, int type) {
 			result = true;
 			break;
 		}
-
 	}
 
 	if(!result) 

@@ -25,7 +25,7 @@
 //	free(composite);
 //	composite = NULL;
 //}
-//
+
 EndPoint* host_create(int port_count) {
 	Host* host = malloc(sizeof(Host));
 	if(!host) 

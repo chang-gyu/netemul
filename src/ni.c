@@ -7,12 +7,25 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <linux/if.h>
+//#include <linux/if.h>
 #include <linux/if_tun.h>
 #include <errno.h>
 
+#ifndef __LINUX
+#include <net/nic.h>
+#endif
+
 #include "ni.h"
 #include "manager.h"
+
+#include <sys/types.h>
+#include <net/if.h>
+#include <net/ethernet.h>
+
+#include <linux/if_packet.h>
+//#include <net/if_arp.h>
+#include <arpa/inet.h>
+
 
 static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	int get_ctl_fd(void) {
@@ -62,15 +75,15 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	}
 
 	/*
-	if((err = ioctl(fd, SIOCGIFHWADDR, &ifr)) < 0) {
-		perror("ioctl(SIOCGIFHWADDR)");
-		close(fd);
-		return -1;
-	}
+	   if((err = ioctl(fd, SIOCGIFHWADDR, &ifr)) < 0) {
+	   perror("ioctl(SIOCGIFHWADDR)");
+	   close(fd);
+	   return -1;
+	   }
 
-	uint64_t* mac = (uint64_t*)ifr.ifr_hwaddr.sa_data;
-	ti->mac = endian48(*mac);
-	*/
+	   uint64_t* mac = (uint64_t*)ifr.ifr_hwaddr.sa_data;
+	   ti->mac = endian48(*mac);
+	   */
 
 	close(fd); 
 
@@ -81,16 +94,16 @@ static TapInterface* tap_create(const char* name, int flags) {
 	struct ifreq ifr;
 	int fd, err;
 	char *dev = "/dev/net/tun";
-	
+
 	if((fd = open(dev, O_RDWR)) < 0) {
-		perror("Cannot open TUN device"); 
+		perror("Cannot open TUN device");
 		exit(1);
 	}
 
 	memset(&ifr, 0, sizeof(ifr));
 
-	ifr.ifr_flags = flags;   
-	
+	ifr.ifr_flags = flags;
+
 	if(*dev) {
 		strncpy(ifr.ifr_name, name, IFNAMSIZ);
 	}
@@ -106,24 +119,53 @@ static TapInterface* tap_create(const char* name, int flags) {
 		return NULL;
 
 	ti->fd = fd;
-	strcpy(ti->name, ifr.ifr_name);	
+	strcpy(ti->name, ifr.ifr_name);
 
 	// Set tap interface up
 	if(do_chflags(ifr.ifr_name, IFF_UP, IFF_UP) < 0) {
 		perror("Interface up failed\n");
-		exit(1);	
+		exit(1);
 	}
-	
+
 	return ti;
 }
 
-static void tap_destroy(TapInterface* ti) { 
+static void tap_destroy(TapInterface* ti) {
 	close(ti->fd);
 	free(ti);
 	ti = NULL;
 }
+#ifndef __LINUX
+void ni_init() {
+	Manager* manager = get_manager();
+	manager->nic_count = 0;
+
+	for(int i = 0; i < nic_count(); i++) {
+		NI* ni = (NI*)malloc(sizeof(NI));
+		ni->used = 0; // unused == 0.
+		printf("ni->used : %d\n", ni->used);
+		manager->nis[i] = ni; //(NI*)malloc(sizeof(NI));
+	}
+}
+
+static NI* nic_create(const char* name, int index) {
+	Manager* manager = get_manager();
+
+	int i;
+	for(i = 0; i < manager->nic_count; i++) {
+		if(manager->nis[i]->used == 0) {
+			manager->nis[i]->used = 1;
+			//strncpy(manager->nis[i]->nic->name, name, strlen(name));
+			break;
+		}
+	}
+
+	return manager->nis[i];
+}
+#endif
 
 NI* ni_create(EndPointPort* port) {
+#ifdef __LINUX
 	NI* ni = malloc(sizeof(NI));
 	if(!ni)
 		return NULL;
@@ -148,14 +190,24 @@ failed:
 		free(ni);
 		ni = NULL;
 	}
-
 	return NULL;
+#else
+	NI* ni = nic_create(port->name, 1);
+	ni->port = port;
+
+	return ni;
+#endif
 }
 
 void ni_destroy(NI* ni) {
+#ifdef __LINUX
 	fd_remove(ni->ti->fd);
 	tap_destroy(ni->ti);
 	free(ni);
 	ni = NULL;
+#else
+	ni->used = 0;
+	ni->nic = NULL;
+#endif
 }
 

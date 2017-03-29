@@ -2,6 +2,12 @@
 #include <malloc.h>
 #include "composite.h"
 
+#ifdef __LINUX
+void (*free_func)(void*) = free;
+#else
+void (*free_func)(void*) = nic_free;
+#endif
+
 static void destroy(Node* this) {
 	Component* component = (Component*)this;
 
@@ -29,8 +35,11 @@ static bool set(Node* this, int argc, char** argv) {
 	return false;
 }
 
-static void get(Node* this) {
-	printf("Get function for '%s' is not implemented\n", this->name);
+static char* get(Node* this) {
+	char* result = (char*)malloc(128);
+	sprintf(result, "Get function for '%s' is not implemented\n", this->name);
+
+	return result;
 }
 
 static void send(Component* this, Packet* packet) {
@@ -40,6 +49,7 @@ static void send(Component* this, Packet* packet) {
 	}
 
 	if(!this->out) {
+		printf("Node %s has no out way\n", this->name); 
 		goto failed;
 	}
 
@@ -53,8 +63,9 @@ static void send(Component* this, Packet* packet) {
 
 	return;
 
+
 failed:
-	free(packet);
+	free_func(packet);
 }
 
 bool component_inherit(Component* component) {
@@ -68,3 +79,4 @@ bool component_inherit(Component* component) {
 
 	return true;	
 }
+

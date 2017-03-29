@@ -8,7 +8,7 @@
 #include "hub_switch.h"
 
 bool switch_unicast(Port* port, Packet* packet) {
-	if(!port->out) 
+	if(!port->out)
 		return false;
 
 #ifdef NET_CONTROL
@@ -54,13 +54,13 @@ bool switch_broadcast(Port* port, Packet* packet) {
 
 		/* Destination */
 		Port* dst = (Port*)s->nodes[i];
-		if(dst == port) 
+		if(dst == port)
 			// Do not send to myself
 			continue;
 
 		/* Packet duplication */
 		Packet* dup_packet = packet_dup(packet);
-		if(!dup_packet) 
+		if(!dup_packet)
 			return false;
 
 		if(!switch_unicast(dst, dup_packet)) {
@@ -70,6 +70,7 @@ bool switch_broadcast(Port* port, Packet* packet) {
 	}
 
 	/* Free original packet */
+	// TODO: packetngin nic_free apply.
 	free(packet);
 	return true;
 }
@@ -87,7 +88,6 @@ Switch* switch_create(int port_count, int type) {
 			name = s->name;
 			name[0] = 's'; // 'Switch'
 			break;
-
 		case NODE_TYPE_HUB_SWITCH:
 			if(!(s = hub_create(port_count)))
 				return NULL;
@@ -95,7 +95,6 @@ Switch* switch_create(int port_count, int type) {
 			name = s->name;
 			name[0] = 'h'; // 'Hub'
 			break;
-
 		default:
 			return NULL;
 	}
@@ -104,7 +103,7 @@ Switch* switch_create(int port_count, int type) {
 	bool result = false;
 	for(int i = 0; i < MAX_NODE_COUNT; i++) {
 		sprintf(&name[1], "%d", i);
-		
+
 		if(!get_node(name)) {
 			result = node_register((Composite*)s, name);
 			break;
