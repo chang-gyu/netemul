@@ -92,7 +92,8 @@ uint32_t tree_get_children_cnt(TreeNode* tree) {
 	return cnt;
 }
 
-static void _destroy(TreeNode* tree) {
+//static???
+void _destroy(TreeNode* tree) {
 	for(int i = 0; i < MAX_CHILDRUN_COUNT; i++) {
 		if(tree->children[i] != NULL) {
 			_destroy(tree->children[i]);

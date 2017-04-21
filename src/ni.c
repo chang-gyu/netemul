@@ -85,7 +85,7 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	   ti->mac = endian48(*mac);
 	   */
 
-	close(fd); 
+	close(fd);
 
 	return err;
 }
@@ -135,19 +135,7 @@ static void tap_destroy(TapInterface* ti) {
 	free(ti);
 	ti = NULL;
 }
-#ifndef __LINUX
-void ni_init() {
-	Manager* manager = get_manager();
-	manager->nic_count = 0;
-
-	for(int i = 0; i < nic_count(); i++) {
-		NI* ni = (NI*)malloc(sizeof(NI));
-		ni->used = 0; // unused == 0.
-		printf("ni->used : %d\n", ni->used);
-		manager->nis[i] = ni; //(NI*)malloc(sizeof(NI));
-	}
-}
-
+/*
 static NI* nic_create(const char* name, int index) {
 	Manager* manager = get_manager();
 
@@ -162,10 +150,8 @@ static NI* nic_create(const char* name, int index) {
 
 	return manager->nis[i];
 }
-#endif
-
-NI* ni_create(EndPointPort* port) {
-#ifdef __LINUX
+*/
+NI* ni_create(VirtualPort* port) {
 	NI* ni = malloc(sizeof(NI));
 	if(!ni)
 		return NULL;
@@ -191,23 +177,12 @@ failed:
 		ni = NULL;
 	}
 	return NULL;
-#else
-	NI* ni = nic_create(port->name, 1);
-	ni->port = port;
-
-	return ni;
-#endif
 }
 
 void ni_destroy(NI* ni) {
-#ifdef __LINUX
 	fd_remove(ni->ti->fd);
 	tap_destroy(ni->ti);
 	free(ni);
 	ni = NULL;
-#else
-	ni->used = 0;
-	ni->nic = NULL;
-#endif
 }
 

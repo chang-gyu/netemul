@@ -4,38 +4,36 @@
 #include "endpoint.h"
 #include "manager.h"
 #include "host.h"
-#include "bridge.h"
+#include "physical.h"
 
-EndPoint* endpoint_create(int port_count, int type) {
+EndPoint* endpoint_create(int port_count, int type, void* context) {
 	EndPoint* end;
 	char* name;
 
 	switch(type) {
+		case NODE_TYPE_PHYSICAL:
+            /*
+			if(!(end = physical_create(context)))
+				return NULL;
+			name = end->name;
+			name[0] = 'e'; // 'bc'
+			break;
+*/
 		case NODE_TYPE_HOST:
 			if(!(end = host_create(port_count)))
 				return NULL;
 
+            printf("debug\n");
+
 			name = end->name;
-			name[0] = 'p'; // 'hc'
+			name[0] = 'p'; // 'pc'
 			break;
-		case NODE_TYPE_BRIDGE:
-			if(!(end = bridge_create()))  
-				return NULL;
-			name = end->name;
-			name[0] = 'b'; // 'bc'
-			break;
-			
+
 
 		default:
 			return NULL;
 	}
 
-#ifndef __LINUX
-#include <net/nic.h>
-	Manager* manager = get_manager();
-	if(nic_count() < manager->nic_count + port_count)
-		goto failed;
-#endif
 	bool result = false;
 	/* Register endpoint to network emulator manager */
 
@@ -47,9 +45,9 @@ EndPoint* endpoint_create(int port_count, int type) {
 				break;
 
 			for(int j = 0; j < end->node_count; j++) {
-				EndPointPort* port = (EndPointPort*)end->nodes[j];
+				VirtualPort* port = (VirtualPort*)end->nodes[j];
 
-				if(!(port->ni = port_attach(port))) 
+				if(!(port->ni = port_attach(port)))
 					break;
 			}
 
@@ -58,7 +56,7 @@ EndPoint* endpoint_create(int port_count, int type) {
 		}
 	}
 
-	if(!result) 
+	if(!result)
 		goto failed;
 
 	return end;

@@ -7,11 +7,11 @@
 
 #include <util/event.h>
 
-#include "bridge.h"
-#include "version.h"
+#include "physical.h"
+//#include "version.h"
 #include "manager.h"
 #include "command.h"
-#include "rpc_manager.h"
+//#include "rpc_manager.h"
 
 #ifdef __LINUX
 #include <signal.h>		//signal
@@ -19,7 +19,7 @@
 
 void signal_exit() {
 		printf("\n===============================================\nbye!\n");
-		bridge_destroy();
+//		bridge_destroy();
 
 		exit(0);
 }
@@ -65,13 +65,13 @@ int main(int argc, char** argv) {
 			case 'h':
 				help();
 				return 0;
-
+/*
 			case 'v':
 				printf("PacketNgin Network Emulator ver %d.%d.%d-%s\n",
 						VERSION_MAJOR, VERSION_MINOR,
 						VERSION_MICRO, VERSION_TAG);
 				return 0;
-
+*/
 			case 's':
 				script = optarg;
 				break;
@@ -87,10 +87,10 @@ int main(int argc, char** argv) {
 	/* Create network emulator manager */
 	if(!manager_init())
 		return -1;
-
+/*
 	if(rpc_manager_init() != 0)
 		return -2;
-
+*/
 	printf("\nWelcome to PacketNgin Network Emulator\n\n");
 
 	/* Execute commands in script */

@@ -39,7 +39,7 @@ static bool set(Node* this, int argc, char** argv) {	//set l0 latency: 10
 }
 /**
  * Find out node is available for connecting.
- * 
+ *
  * @return available component reference or NULL if nothing available.
  */
 static Component* is_available(Node* node) {
@@ -48,14 +48,14 @@ static Component* is_available(Node* node) {
 
 		for(int i = 0; i < composite->node_count; i++) {
 			if(composite->nodes[i]->in == NULL) {
-				return composite->nodes[i]; 
+				return composite->nodes[i];
 			}
 		}
 
 		return NULL;
 	} else {
 		Component* component = (Component*)node;
-		if(!component->out) 
+		if(!component->out)
 			return component;
 
 		return NULL;

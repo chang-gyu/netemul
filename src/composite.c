@@ -5,11 +5,10 @@
 #include "composite.h"
 #include "manager.h"
 #include "cable.h"
-#include "bridge.h"
 
 static void destroy(Node* this) {
 	Composite* composite = (Composite*)this;
-	if(composite->type == NODE_TYPE_BRIDGE) {
+	if(composite->type == NODE_TYPE_PHYSICAL) {
 			_destroy(composite->name);
 	}
 	node_unregister(composite->name);
@@ -76,10 +75,18 @@ bool composite_inherit(Composite* composite) {
 	memset(composite->nodes, 0x0, sizeof(Node*) * composite->node_count);
 
 	switch(composite->type) {
-		case NODE_TYPE_BRIDGE:
+		case NODE_TYPE_PHYSICAL:
+			composite->nodes[0] = (Component*)port_create(NODE_TYPE_VIRTUAL_PORT, NULL);
+			if(!composite->nodes[0])
+				return false;
+
+			composite->nodes[0]->owner = composite;
+
+			break;
+
 		case NODE_TYPE_HOST:
 			for(int i = 0; i < composite->node_count; i++) {
-				composite->nodes[i] = (Component*)port_create(NODE_TYPE_END_PORT);
+				composite->nodes[i] = (Component*)port_create(NODE_TYPE_VIRTUAL_PORT, NULL);
 				if(!composite->nodes[i])
 					return false;
 
@@ -90,7 +97,7 @@ bool composite_inherit(Composite* composite) {
 		case NODE_TYPE_HUB_SWITCH:
 		case NODE_TYPE_ETHER_SWITCH:
 			for(int i = 0; i < composite->node_count; i++) {
-				composite->nodes[i] = (Component*)port_create(NODE_TYPE_PORT);
+				composite->nodes[i] = (Component*)port_create(NODE_TYPE_PORT, NULL);
 				if(!composite->nodes[i])
 					return false;
 
@@ -105,10 +112,11 @@ bool composite_inherit(Composite* composite) {
 				 *
 				 * Bandwidth	: 1Gbytes.
 				 * Error rate	: 0 (No error).
-				 * jitter	: 0 (No variance).
+                 * Drop rate    : 0 (No drop).
 				 * latency	: 0 (No delay).
+				 * jitter	: 0 (No variance).
 				 */
-				composite->nodes[i] = (Component*)cable_create(1000000000, 0, 0, 0);
+				composite->nodes[i] = (Component*)cable_create(1000000000, 0, 0, 0, 0);
 
 				if(!composite->nodes[i])
 					return false;

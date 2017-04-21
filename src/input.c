@@ -12,94 +12,79 @@
 
 #include "manager.h"
 #include "command.h"
-#include "network.h"
+#include "port.h"
+#include "composite.h"
 
 /* Packet processing buffer */
-#define PACKET_BUF_SIZE		2048	
+#define PACKET_BUF_SIZE		2048
+
+static void network_process(Port* port, Packet* packet) {
+	if(!port->is_active || !port->owner->is_active)
+		goto failed;
+
+	if(!port->out)
+		goto failed;
+
+	if(!fifo_push(port->out->queue, packet))
+		goto failed;
+
+	return;
+
+failed:
+	free_func(packet);
+}
 
 static bool input_process(void* context) {
-	Manager* manager = get_manager();
+    Manager* manager = get_manager();
 
-#ifdef __LINUX
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
 
-	fd_set temp = manager->read_fds;
-	int ret = select(manager->nfds, &temp, NULL, NULL, &tv); 
+    fd_set temp = manager->read_fds;
+    int ret = select(manager->nfds, &temp, NULL, NULL, &tv);
 
-	if(ret == -1) {
-		perror("Selector error");
-		return false;
-	} else if(ret) {
-		for(int i = 0; i < manager->fd_count; i++) {
-			int fd = (int64_t)list_get(manager->fds, i);
+    if(ret == -1) {
+        perror("Selector error");
+        return false;
+    } else if(ret) {
+        for(int i = 0; i < manager->fd_count; i++) {
+            int fd = (int64_t)list_get(manager->fds, i);
 
-			if(FD_ISSET(fd, &temp) != 0) {
-				if(fd == STDIN_FILENO) {
-					/* Process input command */
-					command_process(fd);
-				} else {
-					/* Process input packet */
-					Packet* packet = (Packet*)malloc(sizeof(Packet) + PACKET_BUF_SIZE);
-					int size = read(fd, packet->buffer, PACKET_BUF_SIZE); 
+            if(FD_ISSET(fd, &temp) != 0) {
+                if(fd == STDIN_FILENO) {
+                    /* Process input command */
+                    command_process(fd);
+                } else {
+                    /* Process input packet */
+                    Packet* packet = (Packet*)malloc(sizeof(Packet) + PACKET_BUF_SIZE);
+                    printf("??");
+                    int size = read(fd, packet->buffer, PACKET_BUF_SIZE);
+                    printf("1?");
+                    free_func(packet);
+                    printf("2?");
 
-					packet->start = 0;
-					packet->end = packet->start + size;
-					
-					// NOTE: fd is same as network interface index.	
-					EndPointPort* port = manager->nis[fd]->port;
-					network_process(port, packet);
-				}
-			}
-		}
-	} 
-#else
-	uint32_t i = 0;
-	uint32_t count = nic_count();
-	for(i = 0; i < count; i++) {
-		if(manager->nis[i]->used == 0)
-			continue;
+                    //packet->start = 0;
+                    //packet->end = packet->start + size;
 
-		NIC* nic = nic_get(i);
-		if(nic_has_input(nic)) {
-			Packet* packet = nic_input(nic);
+                    //TODO: Distribute VirutalPort & PhysicalPort.
+                    // NOTE: fd is same as network interface index.
+//                    VirtualPort* port = manager->nis[fd]->port; // 여기서 메모리 덤프 발생. Port* port라고 하면 안됨.. 참조를 못함.
+                    //network_process(port, packet);
+                }
+            }
+        }
+    }
 
-			// NOTE: fd is same as network interface index. 
-			EndPointPort* port = manager->nis[i]->port;
-			network_process(port, packet);
-		}
-	}
-#endif
-
-	return true;
+    return true;
 }
-
-#ifndef __LINUX
-static bool cli_process(void* context) {
-	char *name = readline();
-	if(!name)
-		return true;
-	else {
-		int len = strlen(name);
-		if(len > 0) {
-			cmd_exec(name, NULL);
-			fflush(stdout);
-		}
-	}
-	return true;
-}
-#endif
 
 bool input_init() {
-	/* Commands & packet input processing */
-#ifdef __LINUX
-	if(!fd_add(STDIN_FILENO))
-		return false;
-#else
-	event_busy_add(cli_process, NULL);
-#endif
-	event_busy_add(input_process, NULL);
+    /* Commands & packet input processing */
+    if(!fd_add(STDIN_FILENO))
+        return false;
 
-	return true;
+    event_busy_add(input_process, NULL);
+
+    return true;
 }

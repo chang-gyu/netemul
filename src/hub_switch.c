@@ -6,11 +6,11 @@
 #include "switch.h"
 
 static void hub_send(Component* this, Packet* packet) {
-	if(!this->is_active || !this->owner->is_active) { 
-		printf("Node %s is inactive\n", this->name); 
+	if(!this->is_active || !this->owner->is_active) {
+		printf("Node %s is inactive\n", this->name);
 		goto failed;
 	}
-	
+
 	if(!switch_broadcast((Port*)this, packet))
 		goto failed;
 
@@ -22,7 +22,7 @@ failed:
 
 Switch* hub_create(int port_count) {
 	HubSwitch* hub = malloc(sizeof(HubSwitch));
-	if(!hub) 
+	if(!hub)
 		return NULL;
 
 	memset(hub, 0x0, sizeof(HubSwitch));
@@ -35,15 +35,15 @@ Switch* hub_create(int port_count) {
 		goto failed;
 
 	/* Extends */
-	// Nothing 
-	
+	// Nothing
+
 	/* Method overriding */
 	for(int i = 0; i < hub->node_count; i++)
-		hub->nodes[i]->send = hub_send;
+		hub->nodes[i]->packet_forward = hub_send;
 
 	return (Switch*)hub;
 
 failed:
-	hub->destroy((Node*)hub); 
+	hub->destroy((Node*)hub);
 	return NULL;
 }

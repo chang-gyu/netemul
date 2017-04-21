@@ -1,16 +1,16 @@
-#ifndef __BRIDGE_H__
-#define __BRIDGE_H__
+#ifndef __PHYSICAL_PORT_H__
+#define __PHYSICAL_PORT_H__
 
 #include "endpoint.h"
 #include "ni.h"
 
 /* Class Host extends EndPoint */
-typedef struct { 
+typedef struct {
 	EndPoint;
-} Bridge;
+} Physical;
 
 typedef struct _b {
-	Bridge* bridge;
+	Physical* bridge;
 	char* interface;
 } Br;
 
@@ -18,7 +18,7 @@ void bridge_init();
 List* bridge_getlist();
 void _destroy(char* name);
 void bridge_destroy();
-bool bridge_attach(Bridge* bridge, char* name);
+bool bridge_attach(Physical* bridge, char* name);
 EndPoint* bridge_create(void);
 
-#endif /* __BRIDGE_H__ */
+#endif /* __PHYSICAL_PORT_H__ */

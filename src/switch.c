@@ -15,7 +15,7 @@ bool switch_unicast(Port* port, Packet* packet) {
 	if(!fifo_push(port->out->queue, packet))
 		return false;
 #else
-	port->out->send(port->out, packet);
+	port->out->packet_forward(port->out, packet);
 #endif
 
 	return true;

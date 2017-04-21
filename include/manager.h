@@ -16,10 +16,10 @@ typedef struct {
 	NI*	nis[MAX_NI_COUNT];
 	int nic_count;			///< The number of used nic.
 
-#define MAX_NODE_COUNT	2048		//packetngin 64	
+#define MAX_NODE_COUNT	2048		//packetngin 64
 	Map*	nodes;			///< All composite of network emulator (Key: name, Value: pointer of node).
 	List*	components;		///< All components of network emulator.
-	
+
 #ifdef __LINUX
 	List*	fds;			///< Stdin & Tap interface descriptor.
 	int	fd_count;
@@ -31,10 +31,10 @@ typedef struct {
 bool manager_init();
 
 /**
- * Create name and register new node to network emulator. 
+ * Create name and register new node to network emulator.
  *
- * Manager is tracking all of composite nodes by name. Component's name is not 
- * actaully registered. 
+ * Manager is tracking all of composite nodes by name. Component's name is not
+ * actaully registered.
  */
 bool node_register(Composite* node, char* name);
 
@@ -51,7 +51,7 @@ bool fd_add(int fd);
 void fd_remove(int fd);
 Manager* get_manager();
 
-NI* port_attach(EndPointPort* port);
+NI* port_attach(VirtualPort* port);
 void port_detach(NI* ni);
 
 #endif /* __MANAGER_H__ */

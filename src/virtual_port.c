@@ -2,14 +2,14 @@
 #include <string.h>
 #include <malloc.h>
 
-#include "endpoint_port.h"
+#include "virtual_port.h"
 #include "manager.h"
 #include "composite.h"
 
 extern Port* _port_create();
 
 static void destroy(Node* this) {
-	EndPointPort* port = (EndPointPort*)this;
+	VirtualPort* port = (VirtualPort*)this;
 
 	/* Overriding part */
 	port_detach(port->ni);
@@ -31,42 +31,37 @@ static void destroy(Node* this) {
 	port = NULL;
 }
 
-static void send(Component* this, Packet* packet) {
-	EndPointPort* port = (EndPointPort*)this;
+static void packet_forward(Component* this, Packet* packet) {
+	VirtualPort* port = (VirtualPort*)this;
 
 	if(!port->is_active || !port->owner->is_active) {
 		free_func(packet);
 		return;
 	}
 
-#ifdef __LINUX 
 	write(port->fd, packet->buffer, packet->end - packet->start);
 	free_func(packet);
-#else
-	NIC* nic = port->ni->nic;
-	if(!nic_output(nic, packet)) 
-		free_func(packet);
-#endif
 
 	return;
 }
 
-Port* endpoint_port_create() {
-	EndPointPort* port = (EndPointPort*)_port_create();
+Port* virtual_port_create() {
+	VirtualPort* port = (VirtualPort*)_port_create();
+    printf("virtual port created\n");
 	if(!port)
 		return NULL;
 
-	port = realloc(port, sizeof(EndPointPort));
+	port = realloc(port, sizeof(VirtualPort));
 	if(!port)
 		goto failed;
 
-	port->type = NODE_TYPE_END_PORT;
+	port->type = NODE_TYPE_VIRTUAL_PORT;
 
-	/* Extends */ 
+	/* Extends */
 	// Nothing
 
 	/* Method overriding */
-	port->send = send;
+	port->packet_forward = packet_forward;
 	port->destroy = destroy;
 
 	return (Port*)port;

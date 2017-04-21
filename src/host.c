@@ -21,34 +21,34 @@
 //		composite->nodes = NULL;
 //	}
 //
-//	node_unregister(composite->name);	
+//	node_unregister(composite->name);
 //	free(composite);
 //	composite = NULL;
 //}
 
 EndPoint* host_create(int port_count) {
-	Host* host = malloc(sizeof(Host));
-	if(!host) 
-		return NULL;
+    Host* host = malloc(sizeof(Host));
+    if(!host)
+        return NULL;
 
-	memset(host, 0x0, sizeof(Host));
+    memset(host, 0x0, sizeof(Host));
 
-	host->type = NODE_TYPE_HOST;
-	host->node_count = port_count;
+    host->type = NODE_TYPE_HOST;
+    host->node_count = port_count;
 
-	/* Inherit */
-	if(!composite_inherit((Composite*)host))
-		goto failed;
+    /* Inherit */
+    if(!composite_inherit((Composite*)host))
+        goto failed;
 
-	/* Extends */
-	// nothing 
-	
-	/* Method overriding */
-	// nothing 
+    /* Extends */
+    // nothing
 
-	return (EndPoint*)host;
+    /* Method overriding */
+    // nothing
+
+    return (EndPoint*)host;
 
 failed:
-	host->destroy((Node*)host); 
-	return NULL;
+    host->destroy((Node*)host);
+    return NULL;
 }

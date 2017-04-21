@@ -4,7 +4,7 @@
 
 #ifdef __LINUX
 void (*free_func)(void*) = free;
-#else
+#else   // for PacketNgin
 void (*free_func)(void*) = nic_free;
 #endif
 
@@ -14,10 +14,10 @@ static void destroy(Node* this) {
 	Component* src = component->in;
 	Component* dst = component->out;
 
-	if(src) 
+	if(src)
 		src->out = NULL;
 
-	if(dst) 
+	if(dst)
 		dst->in = NULL;
 
 	if(component->owner)
@@ -42,41 +42,48 @@ static char* get(Node* this) {
 	return result;
 }
 
-static void send(Component* this, Packet* packet) {
+static void packet_forward(Component* this, Packet* packet) {
 	if(!this->is_active || !this->owner->is_active) {
-		printf("Node %s is inactive\n", this->name); 
+		printf("Node %s is inactive\n", this->name);
 		goto failed;
 	}
 
 	if(!this->out) {
-		printf("Node %s has no out way\n", this->name); 
+		printf("Node %s has no out way\n", this->name);
 		goto failed;
 	}
 
-#ifdef NET_CONTROL
-	if(!fifo_push(this->out->queue, packet)) {
+	if(!fifo_push(this->out->queue, packet))
 		goto failed;
-	}
-#else
-	this->out->send(this->out, packet);
-#endif
 
 	return;
 
-
 failed:
 	free_func(packet);
+}
+
+bool component_handler(void* context) {
+    Component* component = context;
+    FIFO* queue = component->queue;
+    Packet* packet;
+    while((packet = (Packet*)fifo_pop(queue))) {
+        component->packet_forward(component, packet);
+        return true;
+    }
+
+	return true;
 }
 
 bool component_inherit(Component* component) {
 	component->is_active = true;
 	component->destroy = destroy;
 	component->set = set;
-	component->get = get; 
-	component->send = send;
+	component->get = get;
+	component->packet_forward = packet_forward;
 	if(!(component->queue = fifo_create(PAKCET_QUEUE_SIZE, NULL)))
 		return false;
 
-	return true;	
+	event_busy_add(component_handler, component);
+	return true;
 }
 

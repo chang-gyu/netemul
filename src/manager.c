@@ -10,9 +10,8 @@
 #include "manager.h"
 #include "composite.h"
 #include "input.h"
-#include "network.h"
 #include "ni.h"
-#include "bridge.h"
+#include "physical.h"
 
 static Manager* manager;
 
@@ -25,19 +24,14 @@ bool manager_init() {
 
 	/* Event machine init */
 	event_init();
-#ifdef __LINUX
+
 	/* External interface preparation */
 	manager->fds = list_create(NULL);
 	if(!manager->fds)
 		return false;
-#else
-	/* for packetngin nic init */
-	ni_init();
-#endif
 
 	cmd_init();
 	input_init();
-	bridge_init();
 
 //	 Internal emulation prepartion
 	manager->nodes = map_create(MAX_NODE_COUNT, map_string_hash, map_string_equals, NULL);
@@ -48,25 +42,12 @@ bool manager_init() {
 	if(!manager->components)
 		return false;
 
-	network_init();
-
 	return true;
 }
 
-#ifndef __LINUX
-static char* str[] = { ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7",
-					   ".8", ".9", ".10", ".11", ".12", ".13", ".14", ".15" };
-#endif
-
 bool node_register(Composite* node, char* name) {
 	for(int i = 0; i < node->node_count; i++) {
-#ifdef __LINUX
 		sprintf(node->nodes[i]->name, "%s.%d", node->name, i);
-#else
-		int len = strlen(name);
-		strncpy(node->nodes[i]->name, name, 2);
-		strncpy(node->nodes[i]->name + len, str[i], 3);
-#endif
 		if(!list_add(manager->components, node->nodes[i]))
 			return false;
 	}
@@ -149,8 +130,7 @@ Manager* get_manager() {
 	return manager;
 }
 
-NI* port_attach(EndPointPort* port) {
-#ifdef __LINUX
+NI* port_attach(VirtualPort* port) {
 	NI* ni = NULL;
 	ni = ni_create(port);
 	if(!ni)
@@ -161,28 +141,10 @@ NI* port_attach(EndPointPort* port) {
 	manager->nis[fd] = ni;
 	port->fd = fd;
 
-#else
-	NI* ni = NULL;
-	for(int i = 0; i < nic_count(); i++) {
-		ni = manager->nis[i];
-		if(ni->used == 0) {
-			port->fd = i;
-			ni->nic = nic_get(i);
-			ni->used = 1;
-			ni->port = port;
-			break;
-		}
-	}
-#endif
 	return ni;
 }
 
 void port_detach(NI* ni) {
-#ifdef __LINUX
 	ni_destroy(ni);
-#else
-	ni->used = 0;
-	ni->nic = NULL;
-#endif
 }
 
