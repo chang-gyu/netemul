@@ -1,7 +1,7 @@
 #include <string.h>
 #include <malloc.h>
 #include "port.h"
-#include "endpoint_port.h"
+#include "virtual_port.h"
 
 Port* _port_create() {
 	Port* port = malloc(sizeof(Port));
@@ -16,7 +16,7 @@ Port* _port_create() {
 	if(!component_inherit((Component*)port))
 		goto failed;
 
-	/* Extends */ 
+	/* Extends */
 	// Nothing
 
 	/* Method overriding */
@@ -30,13 +30,17 @@ failed:
 
 }
 
-Port* port_create(int type) {
+Port* port_create(int type, void* context) {
 	switch(type) {
 		case NODE_TYPE_PORT:
 			return _port_create();
-		
-		case NODE_TYPE_END_PORT:
-			return endpoint_port_create();
+
+		case NODE_TYPE_PHYSICAL_PORT:
+            //TODO
+            return NULL;
+
+		case NODE_TYPE_VIRTUAL_PORT:
+			return virtual_port_create();
 
 		default:
 			return NULL;

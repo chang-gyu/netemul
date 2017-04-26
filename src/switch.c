@@ -8,15 +8,11 @@
 #include "hub_switch.h"
 
 bool switch_unicast(Port* port, Packet* packet) {
-	if(!port->out) 
+	if(!port->out)
 		return false;
 
-#ifdef NET_CONTROL
 	if(!fifo_push(port->out->queue, packet))
 		return false;
-#else
-	port->out->send(port->out, packet);
-#endif
 
 	return true;
 }
@@ -54,13 +50,13 @@ bool switch_broadcast(Port* port, Packet* packet) {
 
 		/* Destination */
 		Port* dst = (Port*)s->nodes[i];
-		if(dst == port) 
+		if(dst == port)
 			// Do not send to myself
 			continue;
 
 		/* Packet duplication */
 		Packet* dup_packet = packet_dup(packet);
-		if(!dup_packet) 
+		if(!dup_packet)
 			return false;
 
 		if(!switch_unicast(dst, dup_packet)) {
@@ -103,7 +99,7 @@ Switch* switch_create(int port_count, int type) {
 	bool result = false;
 	for(int i = 0; i < MAX_NODE_COUNT; i++) {
 		sprintf(&name[1], "%d", i);
-		
+
 		if(!get_node(name)) {
 			result = node_register((Composite*)s, name);
 			break;

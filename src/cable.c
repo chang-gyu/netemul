@@ -3,7 +3,7 @@
 #include <math.h>		// For stdev(sqrt, log, cos, sin)
 #include <values.h>		// For stdev(DBL_MIN)
 
-#include <malloc.h>		// For printf 
+#include <malloc.h>		// For print
 
 #include <timer.h>
 #include <util/types.h>
@@ -45,15 +45,6 @@ bool set(Node* this, int argc, char** argv) {
 				return false;
 			}
 			cable->drop_rate = temp;
-		} else if(strcmp(argv[i], "jitter:") == 0) {
-			i++;
-			flag = NULL;
-			temp = strtod(argv[i], &flag);
-			if(flag[0] != '\0') {
-				printf("Jitter must be uint16\n");
-				return false;
-			}
-			cable->jitter = temp;
 		} else if(strcmp(argv[i], "latency:") == 0) {
 			i++;
 			if(!is_uint64(argv[i])) {
@@ -61,13 +52,13 @@ bool set(Node* this, int argc, char** argv) {
 				return false;
 			}
 			cable->latency = parse_uint64(argv[i]);
-		} else if(strcmp(argv[i], "variant:") == 0) {
+		} else if(strcmp(argv[i], "jitter:") == 0) {
 			i++;
 			if(!is_uint64(argv[i])) {
-				printf("Latency must be uint64\n");
+				printf("Jitter must be uint64\n");
 				return false;
 			}
-			cable->variant = parse_uint64(argv[i]);
+			cable->jitter = parse_uint64(argv[i]);
 		} else {
 			printf("Not supported attribute '%s'\n", argv[i]);
 			return false;
@@ -80,11 +71,13 @@ bool set(Node* this, int argc, char** argv) {
 static void get(Node* this) {
 	Cable* cable = (Cable*)this;
 
-	printf("Activity   Bandwidth   Latency(Variant)   Jitter   Error Rate   Drop Rate\n");
+	printf("Activity   Bandwidth   Latency(Variant)   Error Rate   Drop Rate\n");
 	printf("=========================================================================\n");
-	printf("%8s   %8lu   %6lu(%7lu)   %6.3f   %10.3f	%10.3f\n", 
-			cable->is_active? "ON": "OFF", cable->bandwidth, 
-			cable->latency, cable->variant, cable->jitter, cable->error_rate, cable->drop_rate); 
+	printf("%8s   %8lu   %6lu(%7lu)   %10.3f	%10.3f\n",
+			cable->is_active? "ON": "OFF", cable->bandwidth,
+			cable->latency, cable->jitter, cable->error_rate, cable->drop_rate);
+
+    // TODO: For rpc or UI interface, return value should be changed to specific format value.(ex. json)
 }
 
 typedef struct _Cable_Context {
@@ -92,14 +85,14 @@ typedef struct _Cable_Context {
 	Packet* packet;
 } Cable_Context;
 
-static bool _latency(void* context) {
-	Cable_Context* c = (Cable_Context*)context;
-	Packet* packet = (Packet*)c->packet;
-	Component* this = (Component*)c->cable;
+static bool _packet_forward(void* context) {
+	Cable_Context* cable_context = (Cable_Context*)context;
+	Packet* packet = (Packet*)cable_context->packet;
+	Component* this = (Component*)cable_context->cable;
 
-	this->out->send(this->out, packet);
+	this->out->packet_forward(this->out, packet);
 
-	free(c);
+	free(cable_context);
 	return false;
 }
 
@@ -129,10 +122,10 @@ double generateGaussianNoise(double average, double stdev) {
 	return average + z0 * stdev;
 }
 
-static void send(Component* this, Packet* packet) {
+static void packet_forward(Component* this, Packet* packet) {
 	Cable* cable = (Cable*)this;
 
-	/* Bandwidth */	
+	/* Bandwidth */
 	struct timespec tspec;
 	clock_gettime(CLOCK_REALTIME, &tspec);
 	uint64_t time = (uint64_t)tspec.tv_sec * 1000000 + tspec.tv_nsec / 1000; //ms
@@ -155,7 +148,7 @@ static void send(Component* this, Packet* packet) {
 		if(timer_frequency() % 100 <= cable->error_rate) {
 			Ether* ether = (Ether*)(packet->buffer + packet->start);
 			IP* ip = (IP*)ether->payload;
-			uint16_t ip_body_size = ip->length - ip->ihl * 4;
+			uint16_t ip_body_size = endian16(ip->length) - ip->ihl * 4;
 			uint32_t index = timer_frequency() % ip_body_size;
 
 			uint8_t *body;
@@ -177,32 +170,28 @@ static void send(Component* this, Packet* packet) {
 			goto failed;
 	}
 
-	/* Latency & Variant */
+	/* Latency & Jitter */
 	double delay = cable->latency;
 
-	if(cable->latency == 0 && cable->variant == 0) {
-		this->out->send(this->out, packet);
+	if(cable->latency == 0 && cable->jitter == 0) {
+		this->out->packet_forward(this->out, packet);
 		return;
-	} else if(cable->latency >= 100) {
-		delay -= 120;
 	}
-		
 
 	Cable_Context* context = (Cable_Context*)malloc(sizeof(Cable_Context));
 	context->cable = cable;
 	context->packet = packet;
 
-	// Variant 
-	if(cable->variant != 0) 
-		delay = generateGaussianNoise(delay, (double)cable->variant);
+	if(cable->jitter != 0)
+		delay = generateGaussianNoise(delay, (double)cable->jitter);
 
-	uint64_t final;
-	if(delay <= 0)	
-		final = 0;
+	uint64_t total_delay;
+	if(delay <= 0)
+		total_delay = 0;
 	else
-		final = (uint64_t)delay;
+		total_delay = (uint64_t)delay;
 
-	event_timer_add(_latency, context, final, 0);
+	event_timer_add(_packet_forward, context, total_delay, 0);
 
 	return;
 
@@ -210,8 +199,8 @@ failed:
 	free_func(packet);
 }
 
-Cable* cable_create(uint64_t bandwidth, double error_rate, double jitter, 
-		uint64_t latency) {
+Cable* cable_create(uint64_t bandwidth, double error_rate, double drop_rate,
+        double jitter, uint64_t latency) {
 	Cable* cable = malloc(sizeof(Cable));
 	if(!cable)
 		return NULL;
@@ -237,9 +226,7 @@ Cable* cable_create(uint64_t bandwidth, double error_rate, double jitter,
 	/* Method overriding */
 	cable->set = set;
 	cable->get = get;
-#ifdef NET_CONTROL
-	cable->send = send;
-#endif
+	cable->packet_forward = packet_forward;
 
 	return cable;
 

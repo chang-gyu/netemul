@@ -206,7 +206,7 @@ Switch* ether_switch_create(int port_count) {
 
 	/* Method overriding */
 	for(int i = 0; i < s->node_count; i++)
-		s->nodes[i]->send = ether_switch_send; 
+		s->nodes[i]->packet_forward = ether_switch_send; 
 	s->destroy = ether_switch_destroy;
 	s->get = get;
 

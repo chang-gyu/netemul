@@ -9,83 +9,63 @@
 #include <net/nic.h>
 #endif
 
-EndPoint* endpoint_create(int port_count, int type) {
+EndPoint* endpoint_create(int port_count, int type, void* context) {
 	EndPoint* end;
 	char* name;
+    bool result;
 
 	switch(type) {
+        case NODE_TYPE_PHYSICAL:
+            /*
+            if(!(end = physical_create(context)))
+                return NULL;
+
+            name = end->name;
+            name[0] = 'p' // 'pc'
+            */
+            break;
+
 		case NODE_TYPE_HOST:
 			if(!(end = host_create(port_count)))
 				return NULL;
 
 			name = end->name;
-			name[0] = 'p'; // 'Pc'
-			break;
+            name[0] = 'v'; // 'vc'
 
-		default:
-			return NULL;
-	}
-#ifdef __LINUX
-	/* Register endpoint to network emulator manager */
-	bool result = false;
-	for(int i = 0; i < MAX_NODE_COUNT; i++) {
-		sprintf(&name[1], "%d", i);
-		
-		if(!get_node(name)) {
-			if(!node_register((Composite*)end, name))
-				break;
+            result = false;
+            /* Register endpoint to network emulator manager */
+            for(int i = 0; i < MAX_NODE_COUNT; i++) {
+                sprintf(&name[1], "%d", i);
 
-			for(int j = 0; j < end->node_count; j++) {
-				EndPointPort* port = (EndPointPort*)end->nodes[j];
+                if(!get_node(name)) {
+                    if(!node_register((Composite*)end, name))
+                        break;
 
-				if(!(port->ni = port_attach(port))) 
-					break;
-			}
+                    for(int j = 0; j < end->node_count; j++) {
+                        VirtualPort* port = (VirtualPort*)end->nodes[j];
 
-			result = true;
-			break;
-		}
+                        if(!(port->ni = port_attach(port)))
+                            break;
+                    }
 
-	}
-#else
-	Manager* manager = get_manager();
-	if(nic_count() < manager->nic_count + port_count)
-		goto failed;
+                    result = true;
+                    break;
+                }
 
-	// Register endpoint to network emulator manager 
-	bool result = false;
-	/*
-	char* st[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15" };  //TODO: change sprintf
-	*/
-	for(int i = 0; i < MAX_NODE_COUNT; i++) {
-		snprintf(&name[1], "%d", i);
-//		strncpy(name + 1, st[i], 2);
+            }
+            break;
 
-		if(!get_node(name)) {
-			if(!node_register((Composite*)end, name))
-				break;
-			
-			for(int j = 0; j < end->node_count; j++) {
-				EndPointPort* port = (EndPointPort*)end->nodes[j];
+        default:
+            return NULL;
+    }
 
-				if(!(port->ni = port_attach(port)))
-					break;
-			}
+    if(!result)
+        goto failed;
 
-			result = true;
-			break;
-		}
-
-	}
-#endif
-
-	if(!result) 
-		goto failed;
-
-	return end;
+    return end;
 
 failed:
-	end->destroy((Node*)end);
-	return NULL;
+    end->destroy((Node*)end);
+    return NULL;
 }
 

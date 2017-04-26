@@ -21,14 +21,14 @@
 //		composite->nodes = NULL;
 //	}
 //
-//	node_unregister(composite->name);	
+//	node_unregister(composite->name);
 //	free(composite);
 //	composite = NULL;
 //}
 
 EndPoint* host_create(int port_count) {
 	Host* host = malloc(sizeof(Host));
-	if(!host) 
+	if(!host)
 		return NULL;
 
 	memset(host, 0x0, sizeof(Host));
@@ -41,14 +41,14 @@ EndPoint* host_create(int port_count) {
 		goto failed;
 
 	/* Extends */
-	// nothing 
-	
+	// nothing
+
 	/* Method overriding */
-	// nothing 
+	// nothing
 
 	return (EndPoint*)host;
 
 failed:
-	host->destroy((Node*)host); 
+	host->destroy((Node*)host);
 	return NULL;
 }

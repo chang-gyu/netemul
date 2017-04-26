@@ -116,6 +116,8 @@ int main(int argc, char** argv) {
 
 	printf("\nWelcome to PacketNgin Network Emulator\n\n");
 
+    script = "sc";
+
 	/* Execute commands in script */
 	if(script) {
 		int fd = open(script, O_RDONLY);

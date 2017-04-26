@@ -14,10 +14,10 @@ static void destroy(Node* this) {
 	Component* src = component->in;
 	Component* dst = component->out;
 
-	if(src) 
+	if(src)
 		src->out = NULL;
 
-	if(dst) 
+	if(dst)
 		dst->in = NULL;
 
 	if(component->owner)
@@ -39,14 +39,14 @@ static void get(Node* this) {
 	printf("Get function for '%s' is not implemented\n", this->name);
 }
 
-static void send(Component* this, Packet* packet) {
+static void packet_forward(Component* this, Packet* packet) {
 	if(!this->is_active || !this->owner->is_active) {
-		printf("Node %s is inactive\n", this->name); 
+		printf("Node %s is inactive\n", this->name);
 		goto failed;
 	}
 
 	if(!this->out) {
-		printf("Node %s has no out way\n", this->name); 
+		printf("Node %s has no out way\n", this->name);
 		goto failed;
 	}
 
@@ -55,7 +55,7 @@ static void send(Component* this, Packet* packet) {
 		goto failed;
 	}
 #else
-	this->out->send(this->out, packet);
+	this->out->packet_forward(this->out, packet);
 #endif
 
 	return;
@@ -69,11 +69,11 @@ bool component_inherit(Component* component) {
 	component->is_active = true;
 	component->destroy = destroy;
 	component->set = set;
-	component->get = get; 
-	component->send = send;
+	component->get = get;
+	component->packet_forward = packet_forward;
 	if(!(component->queue = fifo_create(PAKCET_QUEUE_SIZE, NULL)))
 		return false;
 
-	return true;	
+	return true;
 }
 

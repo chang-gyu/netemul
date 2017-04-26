@@ -8,7 +8,7 @@
 
 static void destroy(Node* this) {
 	Composite* composite = (Composite*)this;
-	node_unregister(composite->name);	
+	node_unregister(composite->name);
 
 	if(composite->nodes) {
 		// NOTE: node_count decreased in destroy.
@@ -36,7 +36,7 @@ static bool set(Node* this, int argc, char** argv) {
 static void get(Node* this) {
 	Composite* composite = (Composite*)this;
 
-	printf("\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
+	printf("\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/");
 	printf("\t\t-------------------------------\n");
 	printf("\t\t");
 	for(int i = 0; i < composite->node_count; i++) {
@@ -48,7 +48,7 @@ static void get(Node* this) {
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
-		if(component->out) 
+		if(component->out)
 			printf(" %-4s", component->out->owner->name);
 		else
 			printf(" --  ");
@@ -60,7 +60,7 @@ bool composite_inherit(Composite* composite) {
 	composite->is_active = true;
 	composite->destroy = destroy;
 	composite->set = set;
-	composite->get = get; 
+	composite->get = get;
 
 	composite->nodes = malloc(sizeof(Node*) * composite->node_count);
 	if(!composite->nodes)
@@ -69,9 +69,12 @@ bool composite_inherit(Composite* composite) {
 	memset(composite->nodes, 0x0, sizeof(Node*) * composite->node_count);
 
 	switch(composite->type) {
+        case NODE_TYPE_PHYSICAL:
+            // Unimplemented
+            break;
 		case NODE_TYPE_HOST:
 			for(int i = 0; i < composite->node_count; i++) {
-				composite->nodes[i] = (Component*)port_create(NODE_TYPE_END_PORT);
+				composite->nodes[i] = (Component*)port_create(NODE_TYPE_VIRTUAL_PORT, NULL);
 				if(!composite->nodes[i])
 					return false;
 
@@ -82,7 +85,7 @@ bool composite_inherit(Composite* composite) {
 		case NODE_TYPE_HUB_SWITCH:
 		case NODE_TYPE_ETHER_SWITCH:
 			for(int i = 0; i < composite->node_count; i++) {
-				composite->nodes[i] = (Component*)port_create(NODE_TYPE_PORT);
+				composite->nodes[i] = (Component*)port_create(NODE_TYPE_PORT, NULL);
 				if(!composite->nodes[i])
 					return false;
 
@@ -97,14 +100,15 @@ bool composite_inherit(Composite* composite) {
 				 *
 				 * Bandwidth	: 1Gbytes.
 				 * Error rate	: 0 (No error).
+                 * Drop rate    : 0 (No drop).
 				 * jitter	: 0 (No variance).
 				 * latency	: 0 (No delay).
 				 */
-				composite->nodes[i] = (Component*)cable_create(1000000000, 0, 0, 0);
-						
+				composite->nodes[i] = (Component*)cable_create(1000000000, 0, 0, 0, 0);
+
 				if(!composite->nodes[i])
 					return false;
-				
+
 				composite->nodes[i]->owner = composite;
 			}
 			break;

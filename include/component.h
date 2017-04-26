@@ -14,14 +14,14 @@ struct _Component{
 	Node;
 
 	Composite*	owner;
-	Component*	in;                                    
-	Component*	out;					
-	void		(*send)(Component* this, Packet* packet);
+	Component*	in;
+	Component*	out;
+	void		(*packet_forward)(Component* this, Packet* packet);
 #define PAKCET_QUEUE_SIZE	1024
 	FIFO*		queue;
 };
 
-bool component_inherit(Component* component); 
+bool component_inherit(Component* component);
 
 
 void (*free_func)(void*);

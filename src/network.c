@@ -12,11 +12,11 @@
 #include "composite.h"
 
 //static int debug = 0;
-void network_process(EndPointPort* port, Packet* packet) {
-	if(!port->is_active || !port->owner->is_active) 
+void network_process(VirtualPort* port, Packet* packet) {
+	if(!port->is_active || !port->owner->is_active)
 		goto failed;
 
-	if(!port->out) 
+	if(!port->out)
 		goto failed;
 /*
 	Ether* ether = (Ether*)(packet->buffer + packet->start);
@@ -32,12 +32,8 @@ void network_process(EndPointPort* port, Packet* packet) {
 		}
 	}
 */
-#ifdef NET_CONTROL
-	if(!fifo_push(port->out->queue, packet)) 
+	if(!fifo_push(port->out->queue, packet))
 		goto failed;
-#else
-	port->out->send(port->out, packet);
-#endif
 
 	return;
 
@@ -57,20 +53,17 @@ static bool network_control(void* context) {
 		FIFO* queue = component->queue;
 		Packet* packet;
 		while((packet = (Packet*)fifo_pop(queue))) {
-			component->send(component, packet);
+			component->packet_forward(component, packet);
 
 			return true;
 		}
-		
 	}
 
 	return true;
 }
 
 void network_init() {
-#ifdef NET_CONTROL
-	/* Network control start */ 
+	/* Network control start */
 	event_busy_add(network_control, NULL);
-#endif
 }
 

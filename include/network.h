@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 #include <net/packet.h>
-#include "endpoint_port.h"
+#include "virtual_port.h"
 
 void network_init();
-bool network_process(EndPointPort* port, Packet* packet);
+bool network_process(VirtualPort* port, Packet* packet);
 
 #endif /* __NETWORK_H__ */
