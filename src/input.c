@@ -47,7 +47,7 @@ static bool input_process(void* context) {
 					packet->end = packet->start + size;
 
 					// NOTE: fd is same as network interface index.
-					VirtualPort* port = manager->nis[fd]->port;
+					VirtualPort* port = manager->nis[fd]->vport;
 					network_process(port, packet);
 				}
 			}

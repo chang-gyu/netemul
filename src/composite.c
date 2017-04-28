@@ -70,6 +70,7 @@ bool composite_inherit(Composite* composite) {
 
 	switch(composite->type) {
         case NODE_TYPE_PHYSICAL:
+
             // Unimplemented
             break;
 		case NODE_TYPE_HOST:

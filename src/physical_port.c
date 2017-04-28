@@ -9,7 +9,7 @@
 extern Port* _port_create();
 
 static void destroy(Node* this) {
-	VirtualPort* port = (VirtualPort*)this;
+	PhysicalPort* port = (PhysicalPort*)this;
 
 	/* Overriding part */
 	port_detach(port->ni);
@@ -32,7 +32,7 @@ static void destroy(Node* this) {
 }
 
 static void packet_forward(Component* this, Packet* packet) {
-	VirtualPort* port = (VirtualPort*)this;
+	PhysicalPort* port = (PhysicalPort*)this;
 
 	if(!port->is_active || !port->owner->is_active) {
 		free_func(packet);
@@ -45,16 +45,16 @@ static void packet_forward(Component* this, Packet* packet) {
 	return;
 }
 
-Port* virtual_port_create() {
-	VirtualPort* port = (VirtualPort*)_port_create();
+Port* physical_port_create() {
+	PhysicalPort* port = (PhysicalPort*)_port_create();
 	if(!port)
 		return NULL;
 
-	port = realloc(port, sizeof(VirtualPort));
+	port = realloc(port, sizeof(PhysicalPort));
 	if(!port)
 		goto failed;
 
-	port->type = NODE_TYPE_VIRTUAL_PORT;
+	port->type = NODE_TYPE_PHYSICAL_PORT;
 
 	/* Extends */
 	// Nothing

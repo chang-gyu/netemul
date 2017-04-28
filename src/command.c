@@ -157,8 +157,17 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
     }
 
     if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "physical") == 0)) {
-        // unimplement
-        //
+        // TODO: unimplement
+        int port_count = 1;
+        EndPoint* physical = endpoint_create(port_count, NODE_TYPE_PHYSICAL, argv[2]);
+        if(!physical) {
+            printf("Physical create failed\n");
+            return -1;
+        }
+
+        printf("New physical device '%s' created\n", physical->name);
+
+
 
     } else if((strcmp(argv[1], "-v") == 0) || (strcmp(argv[1], "host") == 0)) {
         int port_count = DEFAULT_HOST_PORT_COUNT;   //  default value : 1

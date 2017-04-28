@@ -5,25 +5,29 @@
 #include <net/nic.h>
 #endif
 
+#include "physical_port.h"
 #include "virtual_port.h"
 
 typedef struct {
     int		    fd;
     char		name[16];
     uint64_t	mac;
-} TapInterface;
+} NI_Context;
 
 /**
  * Network interface.
  */
 typedef struct _NI NI;
 struct _NI {
-    TapInterface* ti;
+    NI_Context* ni_context;
     /* Attached port to this */
-    VirtualPort* port;
+    union {
+        VirtualPort* vport;
+        PhysicalPort* pport;
+    };
 };
 
-NI* ni_create(VirtualPort* port);
+NI* ni_create(VirtualPort* vport, PhysicalPort* pport);
 void ni_destroy(NI* ni);
 
 #endif /* __NI_H__*/

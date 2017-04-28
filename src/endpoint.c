@@ -5,9 +5,6 @@
 #include "manager.h"
 #include "host.h"
 
-#ifndef __LINUX
-#include <net/nic.h>
-#endif
 
 EndPoint* endpoint_create(int port_count, int type, void* context) {
 	EndPoint* end;
@@ -16,13 +13,32 @@ EndPoint* endpoint_create(int port_count, int type, void* context) {
 
 	switch(type) {
         case NODE_TYPE_PHYSICAL:
-            /*
-            if(!(end = physical_create(context)))
+            if(!(end = physical_create()))
                 return NULL;
 
             name = end->name;
-            name[0] = 'p' // 'pc'
-            */
+            name[0] = 'p'; // 'pc'
+
+            result = false;
+            /* Register endpoint to network emulator manager */
+            for(int i = 0; i < MAX_NODE_COUNT; i++) {
+                sprintf(&name[1], "%d", i);
+
+                if(!get_node(name)) {
+                    /* 노드 네임이 결국엔 px.0의 형식인데 이렇게 이름을 등록할지, 아니면 원래 인터페이스 이름으로 추가할지 고민해야함 */
+                    if(!node_register((Composite*)end, name))
+                        break;
+
+                    VirtualPort* port = (VirtualPort*)end->nodes[0];
+
+                    if(!(port->ni = nic_attach(port, context)))
+                        break;
+
+                    result = true;
+                    break;
+                }
+
+            }
             break;
 
 		case NODE_TYPE_HOST:

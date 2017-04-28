@@ -2,9 +2,8 @@
 #include <malloc.h>
 #include "composite.h"
 
-#ifdef __LINUX
 void (*free_func)(void*) = free;
-#else
+#ifdef __PACKETNGIN
 void (*free_func)(void*) = nic_free;
 #endif
 

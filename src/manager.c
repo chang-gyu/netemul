@@ -133,13 +133,28 @@ Manager* get_manager() {
 	return manager;
 }
 
-NI* port_attach(VirtualPort* port) {
-	NI* ni = ni_create(port);
+NI* nic_attach(PhysicalPort* port, void* context) {
+    //TODO:
+	NI* ni = ni_create(NULL, port);
 	if(!ni)
 		return NULL;
 
 	// NOTE: fd is same as network interface index.
-	int fd = ni->ti->fd;
+	int fd = ni->ni_context->fd;
+	manager->nis[fd] = ni;
+	port->fd = fd;
+
+	return ni;
+}
+
+
+NI* port_attach(VirtualPort* port) {
+	NI* ni = ni_create(port, NULL);
+	if(!ni)
+		return NULL;
+
+	// NOTE: fd is same as network interface index.
+	int fd = ni->ni_context->fd;
 	manager->nis[fd] = ni;
 	port->fd = fd;
 

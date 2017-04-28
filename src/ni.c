@@ -73,7 +73,7 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	}
 
 	uint64_t* mac = (uint64_t*)ifr.ifr_hwaddr.sa_data;
-	ti->mac = endian48(*mac);
+	ni_context->mac = endian48(*mac);
 	*/
 
 	close(fd);
@@ -81,7 +81,7 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	return err;
 }
 
-static TapInterface* tap_create(const char* name, int flags) {
+static NI_Context* tap_create(const char* name, int flags) {
 	struct ifreq ifr;
 	int fd, err;
 	char *dev = "/dev/net/tun";
@@ -105,12 +105,12 @@ static TapInterface* tap_create(const char* name, int flags) {
 		exit(1);
 	}
 
-	TapInterface* ti = (TapInterface*)malloc(sizeof(TapInterface));
-	if(!ti)
+	NI_Context* ni_context = (NI_Context*)malloc(sizeof(NI_Context));
+	if(!ni_context)
 		return NULL;
 
-	ti->fd = fd;
-	strcpy(ti->name, ifr.ifr_name);
+	ni_context->fd = fd;
+	strcpy(ni_context->name, ifr.ifr_name);
 
 	// Set tap interface up
 	if(do_chflags(ifr.ifr_name, IFF_UP, IFF_UP) < 0) {
@@ -118,47 +118,55 @@ static TapInterface* tap_create(const char* name, int flags) {
 		exit(1);
 	}
 
-	return ti;
+	return ni_context;
 }
 
-static void tap_destroy(TapInterface* ti) {
-	close(ti->fd);
-	free(ti);
-	ti = NULL;
+static void tap_destroy(NI_Context* ni_context) {
+	close(ni_context->fd);
+	free(ni_context);
+	ni_context = NULL;
 }
 
-NI* ni_create(VirtualPort* port) {
-	NI* ni = malloc(sizeof(NI));
-	if(!ni)
-		return NULL;
+NI* ni_create(VirtualPort* vport, PhysicalPort* pport) {
+    NI* ni = malloc(sizeof(NI));
+    NI_Context* ni_context;
+    if(!ni)
+        return NULL;
 
-	TapInterface* ti = tap_create(port->name, IFF_TAP | IFF_NO_PI);
-	if(!ti)
-		goto failed;
+    if(vport) {
+        ni_context = tap_create(vport->name, IFF_TAP | IFF_NO_PI);
+        if(!ni_context)
+            goto failed;
 
-	ni->ti = ti;
-	ni->port = port;
+        ni->ni_context = ni_context;
+        ni->vport = vport;
 
-	if(!fd_add(ti->fd))
-		goto failed;
+        if(!fd_add(ni_context->fd))
+            goto failed;
 
-	return ni;
+        return ni;
+    } else if(pport) {
+        //TODO:
+        return ni;
+    } else
+        goto failed;
 
 failed:
-	if(ti)
-		tap_destroy(ti);
-
-	if(ni) {
-		free(ni);
-		ni = NULL;
-	}
-	return NULL;
+    if(vport) {
+        if(ni_context)
+            tap_destroy(ni_context);
+    }
+    if(ni) {
+        free(ni);
+        ni = NULL;
+    }
+    return NULL;
 }
 
 void ni_destroy(NI* ni) {
-	fd_remove(ni->ti->fd);
-	tap_destroy(ni->ti);
-	free(ni);
-	ni = NULL;
+    fd_remove(ni->ni_context->fd);
+    tap_destroy(ni->ni_context);
+    free(ni);
+    ni = NULL;
 }
 
