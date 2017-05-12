@@ -49,6 +49,7 @@ bool fd_add(int fd);
 void fd_remove(int fd);
 Manager* get_manager();
 
+NI* nic_attach(PhysicalPort* port);
 NI* port_attach(VirtualPort* port);
 void port_detach(NI* ni);
 

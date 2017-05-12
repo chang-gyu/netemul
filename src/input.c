@@ -41,13 +41,17 @@ static bool input_process(void* context) {
 				} else {
 					/* Process input packet */
 					Packet* packet = (Packet*)malloc(sizeof(Packet) + PACKET_BUF_SIZE);
-					int size = read(fd, packet->buffer, PACKET_BUF_SIZE);
+                    int size = read(fd, packet->buffer, PACKET_BUF_SIZE);
+//                    packet_dump(packet);
 
 					packet->start = 0;
 					packet->end = packet->start + size;
 
 					// NOTE: fd is same as network interface index.
-					VirtualPort* port = manager->nis[fd]->vport;
+					void* port = manager->nis[fd]->vport;
+                    if(port == NULL)
+                        port = manager->nis[fd]->pport;
+
 					network_process(port, packet);
 				}
 			}

@@ -70,51 +70,54 @@ bool composite_inherit(Composite* composite) {
 
 	switch(composite->type) {
         case NODE_TYPE_PHYSICAL:
+            composite->nodes[0] = (Component*)port_create(NODE_TYPE_PHYSICAL_PORT);
+            if(!composite->nodes[0])
+                return false;
 
-            // Unimplemented
+            composite->nodes[0]->owner = composite;
             break;
-		case NODE_TYPE_HOST:
-			for(int i = 0; i < composite->node_count; i++) {
-				composite->nodes[i] = (Component*)port_create(NODE_TYPE_VIRTUAL_PORT, NULL);
-				if(!composite->nodes[i])
-					return false;
+        case NODE_TYPE_HOST:
+            for(int i = 0; i < composite->node_count; i++) {
+                composite->nodes[i] = (Component*)port_create(NODE_TYPE_VIRTUAL_PORT);
+                if(!composite->nodes[i])
+                    return false;
 
-				composite->nodes[i]->owner = composite;
-			}
-			break;
+                composite->nodes[i]->owner = composite;
+            }
+            break;
 
-		case NODE_TYPE_HUB_SWITCH:
-		case NODE_TYPE_ETHER_SWITCH:
-			for(int i = 0; i < composite->node_count; i++) {
-				composite->nodes[i] = (Component*)port_create(NODE_TYPE_PORT, NULL);
-				if(!composite->nodes[i])
-					return false;
+        case NODE_TYPE_HUB_SWITCH:
+        case NODE_TYPE_ETHER_SWITCH:
+            for(int i = 0; i < composite->node_count; i++) {
+                composite->nodes[i] = (Component*)port_create(NODE_TYPE_PORT);
+                if(!composite->nodes[i])
+                    return false;
 
-				composite->nodes[i]->owner = composite;
-			}
-			break;
+                composite->nodes[i]->owner = composite;
+            }
+            break;
 
-		case NODE_TYPE_LINK:
-			for(int i = 0; i < composite->node_count; i++) {
-				/**
-				 * Cable default attribute.
-				 *
-				 * Bandwidth	: 1Gbytes.
-				 * Error rate	: 0 (No error).
+        case NODE_TYPE_LINK:
+            for(int i = 0; i < composite->node_count; i++) {
+                /**
+                 * Cable default attribute.
+                 *
+                 * Bandwidth	: 1Gbytes.
+                 * Error rate	: 0 (No error).
                  * Drop rate    : 0 (No drop).
-				 * jitter	: 0 (No variance).
-				 * latency	: 0 (No delay).
-				 */
-				composite->nodes[i] = (Component*)cable_create(1000000000, 0, 0, 0, 0);
+                 * jitter	: 0 (No variance).
+                 * latency	: 0 (No delay).
+                 */
+                composite->nodes[i] = (Component*)cable_create(1000000000, 0, 0, 0, 0);
 
-				if(!composite->nodes[i])
-					return false;
+                if(!composite->nodes[i])
+                    return false;
 
-				composite->nodes[i]->owner = composite;
-			}
-			break;
-	}
+                composite->nodes[i]->owner = composite;
+            }
+            break;
+    }
 
-	return true;
+    return true;
 }
 

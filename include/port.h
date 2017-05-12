@@ -11,7 +11,7 @@ typedef struct {
 	Component;
 } Port;
 
-Port* port_create(int type, void* context);
+Port* port_create(int type);
 
 #endif /* __PORT_H__ */
 

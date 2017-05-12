@@ -20,11 +20,9 @@ typedef struct {
 typedef struct _NI NI;
 struct _NI {
     NI_Context* ni_context;
-    /* Attached port to this */
-    union {
-        VirtualPort* vport;
-        PhysicalPort* pport;
-    };
+    /* Attached port to this(if not using, NULL) */
+    VirtualPort* vport;
+    PhysicalPort* pport;
 };
 
 NI* ni_create(VirtualPort* vport, PhysicalPort* pport);

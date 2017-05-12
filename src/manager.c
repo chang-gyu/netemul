@@ -49,8 +49,12 @@ bool manager_init() {
 
 
 bool node_register(Composite* node, char* name) {
+    printf("nodecount : %d\n", node->node_count);
 	for(int i = 0; i < node->node_count; i++) {
 		sprintf(node->nodes[i]->name, "%s.%d", node->name, i);
+
+
+        printf("debug\n");
 		if(!list_add(manager->components, node->nodes[i]))
 			return false;
 	}
@@ -133,7 +137,7 @@ Manager* get_manager() {
 	return manager;
 }
 
-NI* nic_attach(PhysicalPort* port, void* context) {
+NI* nic_attach(PhysicalPort* port) {
     //TODO:
 	NI* ni = ni_create(NULL, port);
 	if(!ni)

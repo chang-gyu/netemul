@@ -10,6 +10,7 @@
 #include <linux/if.h>
 #include <linux/if_tun.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 #ifndef __LINUX
 #include <net/nic.h>
@@ -80,6 +81,50 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 
 	return err;
 }
+static NI_Context* raw_create(const char* name, int flags) {
+#define ETHER_TYPE 0x0800
+    int fd;
+    if((fd = socket(PF_PACKET, SOCK_RAW, htons(ETHER_TYPE))) == 1) {
+        printf("Socket Error\n");
+        return NULL;
+    }
+
+    struct ifreq ifr;
+    char ifName[IFNAMSIZ];
+    strcpy(ifName, name);
+
+    strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
+    ioctl(fd, SIOCGIFFLAGS, &ifr);
+    ifr.ifr_flags |= IFF_PROMISC;
+    ioctl(fd, SIOCSIFFLAGS, &ifr);
+
+    int sockopt;
+
+    if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt)) == -1) {
+        printf("setsockopt error\n");
+        close(fd);
+        return NULL;
+    }
+
+    if(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, ifName, IFNAMSIZ -1) == -1) {
+        printf("so_bindtodevice\n");
+        close(fd);
+        return NULL;
+    }
+
+    NI_Context* ni_context = (NI_Context*)malloc(sizeof(NI_Context));
+    if(!ni_context)
+        return NULL;
+
+    ni_context->fd = fd;
+    strcpy(ni_context->name, ifr.ifr_name);
+    if(do_chflags(ifr.ifr_name, IFF_UP, IFF_UP) < 0) {
+        perror("Interface up failed\n");
+        exit(1);
+    }
+
+    return ni_context;
+}
 
 static NI_Context* tap_create(const char* name, int flags) {
 	struct ifreq ifr;
@@ -140,13 +185,24 @@ NI* ni_create(VirtualPort* vport, PhysicalPort* pport) {
 
         ni->ni_context = ni_context;
         ni->vport = vport;
+        ni->pport = NULL;
 
         if(!fd_add(ni_context->fd))
             goto failed;
 
         return ni;
     } else if(pport) {
-        //TODO:
+        ni_context = raw_create(pport->ifname, 0);
+        if(!ni_context)
+            goto failed;
+
+        ni->ni_context = ni_context;
+        ni->vport = NULL;
+        ni->pport = pport;
+
+        if(!fd_add(ni_context->fd))
+            goto failed;
+
         return ni;
     } else
         goto failed;

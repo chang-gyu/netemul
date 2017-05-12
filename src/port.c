@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include "port.h"
 #include "virtual_port.h"
+#include "physical_port.h"
 
 Port* _port_create() {
 	Port* port = malloc(sizeof(Port));
@@ -30,14 +31,13 @@ failed:
 
 }
 
-Port* port_create(int type, void* context) {
+Port* port_create(int type) {
 	switch(type) {
 		case NODE_TYPE_PORT:
 			return _port_create();
 
 		case NODE_TYPE_PHYSICAL_PORT:
-            //TODO
-            return NULL;
+            return physical_port_create();
 
 		case NODE_TYPE_VIRTUAL_PORT:
 			return virtual_port_create();

@@ -49,13 +49,9 @@ static void packet_forward(Component* this, Packet* packet) {
 		goto failed;
 	}
 
-#ifdef NET_CONTROL
 	if(!fifo_push(this->out->queue, packet)) {
 		goto failed;
 	}
-#else
-	this->out->packet_forward(this->out, packet);
-#endif
 
 	return;
 
@@ -64,12 +60,27 @@ failed:
 	free_func(packet);
 }
 
+static Packet* packet_read(Component* this) {
+	if(!this->is_active || !this->owner->is_active) {
+		printf("Node %s is inactive\n", this->name);
+		return NULL;
+	}
+
+	if(!this->out) {
+		printf("Node %s has no out way\n", this->name);
+		return NULL;
+	}
+
+    return NULL;
+}
+
 bool component_inherit(Component* component) {
 	component->is_active = true;
 	component->destroy = destroy;
 	component->set = set;
 	component->get = get;
 	component->packet_forward = packet_forward;
+    component->packet_read = packet_read;
 	if(!(component->queue = fifo_create(PAKCET_QUEUE_SIZE, NULL)))
 		return false;
 

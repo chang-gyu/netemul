@@ -68,7 +68,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 		switch(type) {
             case NODE_TYPE_PHYSICAL:
-                // TODO
+				list_component("Physical", components);
                 break;
 			case NODE_TYPE_HOST:
 				list_component("Host", components);
@@ -268,9 +268,6 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
         }
 
         printf("New physical device '%s' created\n", physical->name);
-
-
-
     } else if((strcmp(argv[1], "-v") == 0) || (strcmp(argv[1], "host") == 0)) {
         int port_count = DEFAULT_HOST_PORT_COUNT;   //  default value : 1
 

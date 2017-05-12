@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <linux/if_packet.h>
+#include <linux/if.h>
+#include <linux/if_ether.h>
+#include <sys/ioctl.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
 #include <malloc.h>
@@ -5,6 +13,7 @@
 #include "virtual_port.h"
 #include "manager.h"
 #include "composite.h"
+#include <net/ether.h>
 
 extern Port* _port_create();
 
@@ -38,13 +47,46 @@ static void packet_forward(Component* this, Packet* packet) {
 		free_func(packet);
 		return;
 	}
+    struct sockaddr_ll* saddrll = port->saddrll;
+    Ether* ether = (Ether*)(packet->buffer + packet->start);
 
-	write(port->fd, packet->buffer, packet->end - packet->start);
+    memcpy((void*)(saddrll->sll_addr), (void*)(ether->dmac), ETH_ALEN);
+	sendto(port->wfd, packet->buffer, packet->end - packet->start, 0, (struct sockaddr*)saddrll, sizeof(*saddrll));
 	free_func(packet);
 
 	return;
 }
 
+bool physical_send_port_create(PhysicalPort* port) {
+    char* iface = port->ifname;
+    int wfd;
+    if((wfd = socket(AF_PACKET, SOCK_RAW, ETH_P_IP)) < 0) {
+        printf("Error\n");
+        return NULL;
+    }
+
+    struct ifreq buffer;
+    int ifindex;
+    memset(&buffer, 0x00, sizeof(buffer));
+    strncpy(buffer.ifr_name, iface, IFNAMSIZ);
+    if(ioctl(wfd, SIOCGIFINDEX, &buffer) < 0) {
+        printf("error\n");
+        close(wfd);
+        return NULL;
+    }
+    ifindex = buffer.ifr_ifindex;
+
+    struct sockaddr_ll* saddrll;
+    saddrll = malloc(sizeof(struct sockaddr_ll));
+    memset((void*)saddrll, 0, sizeof(struct sockaddr_ll));
+    saddrll->sll_family = PF_PACKET;
+    saddrll->sll_ifindex = port->fd;
+    saddrll->sll_halen = ETH_ALEN;
+
+    port->wfd = wfd;
+    port->saddrll = saddrll;
+    return true;
+}
 Port* physical_port_create() {
 	PhysicalPort* port = (PhysicalPort*)_port_create();
 	if(!port)
