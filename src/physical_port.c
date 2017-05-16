@@ -47,11 +47,15 @@ static void packet_forward(Component* this, Packet* packet) {
 		free_func(packet);
 		return;
 	}
-    struct sockaddr_ll* saddrll = port->saddrll;
-    Ether* ether = (Ether*)(packet->buffer + packet->start);
 
-    memcpy((void*)(saddrll->sll_addr), (void*)(ether->dmac), ETH_ALEN);
-	sendto(port->wfd, packet->buffer, packet->end - packet->start, 0, (struct sockaddr*)saddrll, sizeof(*saddrll));
+    printf("Packet_forward called\n");
+//    struct sockaddr_ll* saddrll = &(port->saddrll);
+    Ether* ether = (Ether*)(packet->buffer + packet->start);
+    memcpy((void*)&(port->saddrll.sll_addr), (void*)ether, ETH_ALEN);
+	if(sendto(port->wfd, packet->buffer, packet->end - packet->start, 0, (struct sockaddr*)&(port->saddrll), sizeof(port->saddrll)) > 0)
+        printf("Success!\n");
+    else
+    printf("1dd\n");
 	free_func(packet);
 
 	return;
@@ -75,18 +79,21 @@ bool physical_send_port_create(PhysicalPort* port) {
         return NULL;
     }
     ifindex = buffer.ifr_ifindex;
+    printf("%s\n", buffer.ifr_name);
+    printf("wfd : %d\n", wfd);
 
-    struct sockaddr_ll* saddrll;
-    saddrll = malloc(sizeof(struct sockaddr_ll));
-    memset((void*)saddrll, 0, sizeof(struct sockaddr_ll));
-    saddrll->sll_family = PF_PACKET;
-    saddrll->sll_ifindex = port->fd;
-    saddrll->sll_halen = ETH_ALEN;
+    //struct sockaddr_ll* saddrll = &(port->saddrll);
+//    saddrll = malloc(sizeof(struct sockaddr_ll));
+    memset((void*)&(port->saddrll), 0, sizeof(struct sockaddr_ll));
+    port->saddrll.sll_family = PF_PACKET;
+    port->saddrll.sll_ifindex = ifindex;
+    printf("port->fd : %d ifindex : %d\n", port->saddrll.sll_ifindex, ifindex);
+    port->saddrll.sll_halen = ETH_ALEN;
 
     port->wfd = wfd;
-    port->saddrll = saddrll;
     return true;
 }
+
 Port* physical_port_create() {
 	PhysicalPort* port = (PhysicalPort*)_port_create();
 	if(!port)

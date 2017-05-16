@@ -18,7 +18,7 @@ struct _Component{
 	Component*	out;
 	void		(*packet_forward)(Component* this, Packet* packet);
     Packet*     (*packet_read)(Component* this);
-#define PAKCET_QUEUE_SIZE	1024
+#define PAKCET_QUEUE_SIZE	2048
 	FIFO*		queue;
 };
 
