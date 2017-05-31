@@ -16,11 +16,12 @@
 #include <net/ether.h>
 
 extern Port* _port_create();
-
+/*
 static void destroy(Node* this) {
+    /
 	PhysicalPort* port = (PhysicalPort*)this;
 
-	/* Overriding part */
+//	 Overriding part
 	port_detach(port->ni);
 
 	Component* src = port->in;
@@ -39,7 +40,7 @@ static void destroy(Node* this) {
 	free(port);
 	port = NULL;
 }
-
+*/
 static void packet_forward(Component* this, Packet* packet) {
 	PhysicalPort* port = (PhysicalPort*)this;
 
@@ -48,14 +49,11 @@ static void packet_forward(Component* this, Packet* packet) {
 		return;
 	}
 
-    printf("Packet_forward called\n");
-//    struct sockaddr_ll* saddrll = &(port->saddrll);
     Ether* ether = (Ether*)(packet->buffer + packet->start);
     memcpy((void*)&(port->saddrll.sll_addr), (void*)ether, ETH_ALEN);
-	if(sendto(port->wfd, packet->buffer, packet->end - packet->start, 0, (struct sockaddr*)&(port->saddrll), sizeof(port->saddrll)) > 0)
-        printf("Success!\n");
-    else
-    printf("1dd\n");
+
+	if(sendto(port->wfd, packet->buffer, packet->end - packet->start, 0, (struct sockaddr*)&(port->saddrll), sizeof(port->saddrll)) < 0)
+        printf("Packet sendint error : %s\n", port->name);
 	free_func(packet);
 
 	return;
@@ -74,20 +72,16 @@ bool physical_send_port_create(PhysicalPort* port) {
     memset(&buffer, 0x00, sizeof(buffer));
     strncpy(buffer.ifr_name, iface, IFNAMSIZ);
     if(ioctl(wfd, SIOCGIFINDEX, &buffer) < 0) {
-        printf("error\n");
+        printf("Error\n");
         close(wfd);
         return NULL;
     }
-    ifindex = buffer.ifr_ifindex;
-    printf("%s\n", buffer.ifr_name);
-    printf("wfd : %d\n", wfd);
 
-    //struct sockaddr_ll* saddrll = &(port->saddrll);
-//    saddrll = malloc(sizeof(struct sockaddr_ll));
+    ifindex = buffer.ifr_ifindex;
+
     memset((void*)&(port->saddrll), 0, sizeof(struct sockaddr_ll));
     port->saddrll.sll_family = PF_PACKET;
     port->saddrll.sll_ifindex = ifindex;
-    printf("port->fd : %d ifindex : %d\n", port->saddrll.sll_ifindex, ifindex);
     port->saddrll.sll_halen = ETH_ALEN;
 
     port->wfd = wfd;
@@ -110,7 +104,7 @@ Port* physical_port_create() {
 
 	/* Method overriding */
 	port->packet_forward = packet_forward;
-	port->destroy = destroy;
+//	port->destroy = destroy;
 
 	return (Port*)port;
 

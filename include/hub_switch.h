@@ -4,10 +4,10 @@
 #include "switch.h"
 
 /**
- * Ethernet Hub switch. 
+ * Ethernet Hub switch.
  *
  * It broadcasts packets to all ports.
- */ 
+ */
 
 /* Class HubSwitch extends Switch */
 typedef struct {

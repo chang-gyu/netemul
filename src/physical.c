@@ -26,6 +26,29 @@
 //	composite = NULL;
 //}
 
+static void get(Node* this) {
+	Physical* composite = (Physical*)this;
+    PhysicalPort* port = (PhysicalPort*)(composite->nodes[0]);
+	printf("\t\t%s\t%s\t\t   %s\n", composite->name, port->ifname, composite->is_active? "/ON/": "/OFF/");
+	printf("\t\t-------------------------------\n");
+	printf("\t\t");
+	for(int i = 0; i < composite->node_count; i++) {
+		printf("[%02d] ", i);
+	}
+	printf("\n");
+
+	printf("\t\t");
+	for(int i = 0; i < composite->node_count; i++) {
+		Component* component = (Component*)composite->nodes[i];
+
+		if(component->out)
+			printf(" %-4s", component->out->owner->name);
+		else
+			printf(" --  ");
+	}
+	printf("\n\n");
+}
+
 EndPoint* physical_create() {
 	Physical* physical = malloc(sizeof(Physical));
 	if(!physical)
@@ -44,7 +67,7 @@ EndPoint* physical_create() {
 	// nothing
 
 	/* Method overriding */
-	// nothing
+	physical->get = get;
 
 	return (EndPoint*)physical;
 

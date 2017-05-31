@@ -100,12 +100,12 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 
 	if(argc == 2) {
 		if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "physical") == 0)) {
-            label("Physical Devices");
+            label("Physical Ports");
             if(!list(NODE_TYPE_PHYSICAL))
                 return -1;
 
         } else if((strcmp(argv[1], "-v") == 0) || (strcmp(argv[1], "host") == 0)) {
-			label("Virtual Devices");
+			label("Virtual Ports");
 			if(!list(NODE_TYPE_HOST))
 				return -1;
 
@@ -128,11 +128,11 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
 			return CMD_STATUS_NOT_FOUND;
 		}
 	} else {
-        label("Physical Devices");
+        label("Physical Ports");
         if(!list(NODE_TYPE_PHYSICAL))
             return -1;
 
-        label("Virtual Devices");
+        label("Virtual Ports");
         if(!list(NODE_TYPE_HOST))
             return -1;
 
@@ -146,9 +146,7 @@ static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exi
         label("Link");
         if(!list(NODE_TYPE_LINK))
             return -1;
-
     }
-
 
     return 0;
 }
@@ -173,10 +171,8 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
                     Cable* cable = (Cable*)link->nodes[j];
 
                     if(!strcmp(temp, cable->in->name)) {
-                        //TreeNode* rtn = tree_add(parent, link);
                         list_remove_data(list, link);
                         strcpy(out_node, cable->out->name);
-                        //return rtn;
                         return parent;
                     }
                 }
@@ -259,7 +255,6 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
     }
 
     if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "physical") == 0)) {
-        // TODO: unimplement
         int port_count = 1;
         EndPoint* physical = endpoint_create(port_count, NODE_TYPE_PHYSICAL, argv[2]);
         if(!physical) {
@@ -360,7 +355,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
         if(!s) {
             printf("Hub create failed\n");
             return -1;
-        } 
+        }
 
         printf("New switch '%s' created\n", s->name);
     } else {
@@ -371,7 +366,7 @@ static int cmd_create(int argc, char** argv, void(*callback)(char* result, int e
 }
 
 static int cmd_destroy(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-    if(argc < 2)
+    if(argc != 2)
         return CMD_STATUS_WRONG_NUMBER;
 
     Node* node = get_node(argv[1]);
@@ -388,7 +383,7 @@ static int cmd_destroy(int argc, char** argv, void(*callback)(char* result, int 
 }
 
 static int cmd_activate(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-    if(argc < 2)
+    if(argc != 2)
         return CMD_STATUS_WRONG_NUMBER;
 
     Node* node = get_node(argv[1]);
@@ -405,7 +400,7 @@ static int cmd_activate(int argc, char** argv, void(*callback)(char* result, int
 }
 
 static int cmd_deactivate(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-    if(argc < 2)
+    if(argc != 2)
         return CMD_STATUS_WRONG_NUMBER;
 
     Node* node = get_node(argv[1]);
@@ -442,7 +437,7 @@ static int cmd_set(int argc, char** argv, void(*callback)(char* result, int exit
 }
 
 static int cmd_get(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-    if(argc < 2)
+    if(argc =! 2)
         return CMD_STATUS_WRONG_NUMBER;
 
     Node* node = get_node(argv[1]);
@@ -458,32 +453,28 @@ static int cmd_get(int argc, char** argv, void(*callback)(char* result, int exit
 }
 
 Command commands[] = {
-    { 
+    {
         .name = "exit",
         .desc = "Exit the CLI",
         .func = cmd_exit
     },
-
-    { 
+    {
         .name = "help",
         .desc = "Show this message",
         .func = cmd_help
     },
-
     {
         .name = "list",
-        .desc = "Show node list", 
+        .desc = "Show node list",
         .args = "[NODE_TYPE]",
         .func = cmd_list
     },
-
     {
         .name = "tree",
-        .desc = "Show topology of node (Which has the greatest number of node in default)",
+        .desc = "Show the topology of node (Which has the greatest number of node in default)",
         .args = "[NODE]",
         .func = cmd_tree
     },
-
     {
         .name = "create",
         .desc = "Create network node",
@@ -504,7 +495,7 @@ Command commands[] = {
     },
     {
         .name = "off",
-        .desc = "Deactivate network node",  
+        .desc = "Deactivate network node",
         .args = "NODE",
         .func = cmd_deactivate
     },
@@ -525,7 +516,6 @@ Command commands[] = {
     }
 };
 
-//not used in packetngin
 static int execute_cmd(char* line, bool is_dump) {
     // if is_dump == true then file cmd
     //    is_dump == false then stdin cmd
@@ -536,7 +526,7 @@ static int execute_cmd(char* line, bool is_dump) {
 
     if(exit_status != 0) {
         if(exit_status == CMD_STATUS_WRONG_NUMBER) {
-            printf("wrong number of arguments\n"); 
+            printf("wrong number of arguments\n");
         } else if(exit_status == CMD_STATUS_NOT_FOUND) {
             printf("wrong name of command\n");
         } else if(exit_status < 0) {
@@ -546,7 +536,6 @@ static int execute_cmd(char* line, bool is_dump) {
         } else {
             printf("%d'std argument type wrong\n", exit_status); 
         }
-    }
     printf("> ");
     fflush(stdout);
 
@@ -554,9 +543,6 @@ static int execute_cmd(char* line, bool is_dump) {
 }
 
 #define MAX_LINE_SIZE		2048
-
-
-//not used in packetngin
 void command_process(int fd) {
     char line[MAX_LINE_SIZE] = {0, };
     char* head;
@@ -572,7 +558,7 @@ void command_process(int fd) {
 
                 if(ret == 0) {
                     head = &line[seek] + 1;
-                } else { 
+                } else {
                     eod = 0;
                     return;
                 }
@@ -599,4 +585,3 @@ void command_process(int fd) {
     }
     eod = 0;
 }
-

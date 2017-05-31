@@ -6,7 +6,7 @@
 #include "port.h"
 
 /* Abstract Class Switch extends Composite */
-typedef struct { 
+typedef struct {
 	Composite;
 } Switch;
 

@@ -81,6 +81,7 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 
 	return err;
 }
+
 static NI_Context* raw_create(const char* name, int flags) {
 #define ETHER_TYPE 0x0800
     int fd;
@@ -89,34 +90,33 @@ static NI_Context* raw_create(const char* name, int flags) {
         return NULL;
     }
 
-    struct ifreq ifr;
-    char ifName[IFNAMSIZ];
-    strcpy(ifName, name);
+    NI_Context* ni_context = (NI_Context*)malloc(sizeof(NI_Context));
+    if(!ni_context)
+        return NULL;
+    ni_context->fd = fd;
 
+    struct ifreq ifr;
+    //TODO: comment 
+   // char ifName[IFNAMSIZ];
+    char* ifName = name;
     strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
     ioctl(fd, SIOCGIFFLAGS, &ifr);
-    ifr.ifr_flags |= IFF_PROMISC;
+//    ifr.ifr_flags |= flags;
+    ifr.ifr_flags |= flags;
     ioctl(fd, SIOCSIFFLAGS, &ifr);
 
     int sockopt;
 
     if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt)) == -1) {
         printf("setsockopt error\n");
-        close(fd);
         return NULL;
     }
 
     if(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, ifName, IFNAMSIZ -1) == -1) {
         printf("so_bindtodevice\n");
-        close(fd);
         return NULL;
     }
 
-    NI_Context* ni_context = (NI_Context*)malloc(sizeof(NI_Context));
-    if(!ni_context)
-        return NULL;
-
-    ni_context->fd = fd;
     strcpy(ni_context->name, ifr.ifr_name);
     if(do_chflags(ifr.ifr_name, IFF_UP, IFF_UP) < 0) {
         perror("Interface up failed\n");
@@ -166,12 +166,14 @@ static NI_Context* tap_create(const char* name, int flags) {
 	return ni_context;
 }
 
+//tap___!!//
 static void tap_destroy(NI_Context* ni_context) {
 	close(ni_context->fd);
 	free(ni_context);
 	ni_context = NULL;
 }
 
+//FIXME: Port* port, type
 NI* ni_create(VirtualPort* vport, PhysicalPort* pport) {
     NI* ni = malloc(sizeof(NI));
     NI_Context* ni_context;
@@ -192,7 +194,7 @@ NI* ni_create(VirtualPort* vport, PhysicalPort* pport) {
 
         return ni;
     } else if(pport) {
-        ni_context = raw_create(pport->ifname, 0);
+        ni_context = raw_create(pport->ifname, IFF_PROMISC);
         if(!ni_context)
             goto failed;
 
@@ -208,10 +210,9 @@ NI* ni_create(VirtualPort* vport, PhysicalPort* pport) {
         goto failed;
 
 failed:
-    if(vport) {
-        if(ni_context)
-            tap_destroy(ni_context);
-    }
+    if(ni_context)
+        tap_destroy(ni_context);
+
     if(ni) {
         free(ni);
         ni = NULL;

@@ -41,7 +41,7 @@ failed:
 	free_func(packet);
 }
 
-
+// budget
 static bool network_control(void* context) {
 	Manager* manager = get_manager();
 

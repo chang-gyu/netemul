@@ -28,6 +28,7 @@ static bool input_process(void* context) {
 	int ret = select(manager->nfds, &temp, NULL, NULL, &tv);
 
 	if(ret == -1) {
+        //??
 		perror("Selector error");
 		return false;
 	} else if(ret) {
@@ -41,13 +42,16 @@ static bool input_process(void* context) {
 				} else {
 					/* Process input packet */
 					Packet* packet = (Packet*)malloc(sizeof(Packet) + PACKET_BUF_SIZE);
+                    //FIXME: packet null check
                     int size = read(fd, packet->buffer, PACKET_BUF_SIZE);
+                    //FIXME: return error check
 //                    packet_dump(packet);
 
 					packet->start = 0;
 					packet->end = packet->start + size;
 
 					// NOTE: fd is same as network interface index.
+                    // FIXME: 
 					void* port = manager->nis[fd]->vport;
                     if(port == NULL)
                         port = manager->nis[fd]->pport;

@@ -26,18 +26,14 @@ EndPoint* endpoint_create(int port_count, int type, void* context) {
                 sprintf(&name[1], "%d", i);
 
                 if(!get_node(name)) {
-            printf("debug1 : %s\n", name);
-                    /* 노드 네임이 결국엔 px.0의 형식인데 이렇게 이름을 등록할지, 아니면 원래 인터페이스 이름으로 추가할지 고민해야함 */
                     if(!node_register((Composite*)end, name))
                         break;
 
-            printf("debug3\n");
                     PhysicalPort* port = (PhysicalPort*)end->nodes[0];
                     strcpy(port->ifname, (char*)context);
 
                     if(!(port->ni = nic_attach(port)))
                         break;
-            printf("debug2\n");
 
                     if(!(physical_send_port_create(port)))
                         break;

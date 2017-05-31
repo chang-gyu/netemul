@@ -13,8 +13,8 @@ typedef struct _NI NI;
 typedef struct {
     Port;
 
-    char ifname[16];
     /* Attached NI to this */
+    char ifname[16];
     NI*         ni;
     int         fd;
     int         wfd;
