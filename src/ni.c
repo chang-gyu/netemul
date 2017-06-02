@@ -21,7 +21,7 @@
 
 static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	int get_ctl_fd(void) {
-		int s_errno;
+        	int s_errno;
 		int fd;
 
 		fd = socket(PF_INET, SOCK_DGRAM, 0);
@@ -67,15 +67,15 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	}
 
 	/*
-	if((err = ioctl(fd, SIOCGIFHWADDR, &ifr)) < 0) {
-		perror("ioctl(SIOCGIFHWADDR)");
-		close(fd);
-		return -1;
-	}
+	   if((err = ioctl(fd, SIOCGIFHWADDR, &ifr)) < 0) {
+	   perror("ioctl(SIOCGIFHWADDR)");
+	   close(fd);
+	   return -1;
+	   }
 
-	uint64_t* mac = (uint64_t*)ifr.ifr_hwaddr.sa_data;
-	ni_context->mac = endian48(*mac);
-	*/
+	   uint64_t* mac = (uint64_t*)ifr.ifr_hwaddr.sa_data;
+	   ni_context->mac = endian48(*mac);
+	   */
 
 	close(fd);
 
@@ -84,46 +84,42 @@ static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 
 static NI_Context* raw_create(const char* name, int flags) {
 #define ETHER_TYPE 0x0800
-    int fd;
-    if((fd = socket(PF_PACKET, SOCK_RAW, htons(ETHER_TYPE))) == 1) {
-        printf("Socket Error\n");
-        return NULL;
-    }
+	int fd;
+	if((fd = socket(PF_PACKET, SOCK_RAW, htons(ETHER_TYPE))) == 1) {
+		printf("Socket Error\n");
+		return NULL;
+	}
 
-    NI_Context* ni_context = (NI_Context*)malloc(sizeof(NI_Context));
-    if(!ni_context)
-        return NULL;
-    ni_context->fd = fd;
+	NI_Context* ni_context = (NI_Context*)malloc(sizeof(NI_Context));
+	if(!ni_context)
+		return NULL;
+	ni_context->fd = fd;
 
-    struct ifreq ifr;
-    //TODO: comment 
-   // char ifName[IFNAMSIZ];
-    char* ifName = name;
-    strncpy(ifr.ifr_name, ifName, IFNAMSIZ - 1);
-    ioctl(fd, SIOCGIFFLAGS, &ifr);
-//    ifr.ifr_flags |= flags;
-    ifr.ifr_flags |= flags;
-    ioctl(fd, SIOCSIFFLAGS, &ifr);
+	//get & set the active flag word of the device.
+	struct ifreq ifr;
+	strncpy(ifr.ifr_name, name, IFNAMSIZ - 1);
+	ioctl(fd, SIOCGIFFLAGS, &ifr);
+	ifr.ifr_flags |= flags;
+	ioctl(fd, SIOCSIFFLAGS, &ifr);
 
-    int sockopt;
+	int sockopt;
+	if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt)) == -1) {
+		printf("setsockopt error\n");
+		return NULL;
+	}
 
-    if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt)) == -1) {
-        printf("setsockopt error\n");
-        return NULL;
-    }
+	if(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, name, IFNAMSIZ -1) == -1) {
+		printf("so_bindtodevice\n");
+		return NULL;
+	}
 
-    if(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, ifName, IFNAMSIZ -1) == -1) {
-        printf("so_bindtodevice\n");
-        return NULL;
-    }
+	strcpy(ni_context->name, ifr.ifr_name);
+	if(do_chflags(ifr.ifr_name, IFF_UP, IFF_UP) < 0) {
+		perror("Interface up failed\n");
+		exit(1);
+	}
 
-    strcpy(ni_context->name, ifr.ifr_name);
-    if(do_chflags(ifr.ifr_name, IFF_UP, IFF_UP) < 0) {
-        perror("Interface up failed\n");
-        exit(1);
-    }
-
-    return ni_context;
+	return ni_context;
 }
 
 static NI_Context* tap_create(const char* name, int flags) {
@@ -167,63 +163,57 @@ static NI_Context* tap_create(const char* name, int flags) {
 }
 
 //tap___!!//
-static void tap_destroy(NI_Context* ni_context) {
+static void _context_destroy(NI_Context* ni_context) {
 	close(ni_context->fd);
 	free(ni_context);
 	ni_context = NULL;
 }
 
-//FIXME: Port* port, type
-NI* ni_create(VirtualPort* vport, PhysicalPort* pport) {
-    NI* ni = malloc(sizeof(NI));
-    NI_Context* ni_context;
-    if(!ni)
-        return NULL;
+NI* ni_create(Port* port, int type) {
+	NI* ni = malloc(sizeof(NI));
+	if(!ni)
+		return NULL;
 
-    if(vport) {
-        ni_context = tap_create(vport->name, IFF_TAP | IFF_NO_PI);
-        if(!ni_context)
-            goto failed;
+	NI_Context* ni_context;
+	if(type == NODE_TYPE_VIRTUAL_PORT) {
+		VirtualPort* vport = (VirtualPort*)port;
+		ni_context = tap_create(vport->name, IFF_TAP | IFF_NO_PI);
+		if(!ni_context)
+			goto failed;
+		ni->port = port;
+		ni->type = NODE_TYPE_VIRTUAL_PORT;
+	} else if(type == NODE_TYPE_PHYSICAL_PORT) {
+		PhysicalPort* pport = (PhysicalPort*)port;
+		ni_context = raw_create(pport->ifname, IFF_PROMISC);
+		if(!ni_context)
+			goto failed;
+		ni->port = port;
+		ni->type = NODE_TYPE_PHYSICAL_PORT;
+	} else {
+		goto failed;
+	}
 
-        ni->ni_context = ni_context;
-        ni->vport = vport;
-        ni->pport = NULL;
+	ni->ni_context = ni_context;
+	if(!fd_add(ni_context->fd))
+		goto failed;
 
-        if(!fd_add(ni_context->fd))
-            goto failed;
-
-        return ni;
-    } else if(pport) {
-        ni_context = raw_create(pport->ifname, IFF_PROMISC);
-        if(!ni_context)
-            goto failed;
-
-        ni->ni_context = ni_context;
-        ni->vport = NULL;
-        ni->pport = pport;
-
-        if(!fd_add(ni_context->fd))
-            goto failed;
-
-        return ni;
-    } else
-        goto failed;
+	return ni;
 
 failed:
-    if(ni_context)
-        tap_destroy(ni_context);
+	if(ni_context)
+		_context_destroy(ni_context);
 
-    if(ni) {
-        free(ni);
-        ni = NULL;
-    }
-    return NULL;
+	if(ni) {
+		free(ni);
+		ni = NULL;
+	}
+	return NULL;
 }
 
 void ni_destroy(NI* ni) {
-    fd_remove(ni->ni_context->fd);
-    tap_destroy(ni->ni_context);
-    free(ni);
-    ni = NULL;
+	fd_remove(ni->ni_context->fd);
+	_context_destroy(ni->ni_context);
+	free(ni);
+	ni = NULL;
 }
 

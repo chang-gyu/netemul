@@ -29,11 +29,11 @@ bool manager_init() {
 	manager->fds = list_create(NULL);
 	if(!manager->fds)
 		return false;
-
+	/* command & network input processing init */
 	cmd_init();
 	input_init();
 
-//	 Internal emulation prepartion
+	/* Internal emulation prepartion */
 	manager->nodes = map_create(MAX_NODE_COUNT, map_string_hash, map_string_equals, NULL);
 	if(!manager->nodes)
 		return false;
@@ -46,7 +46,6 @@ bool manager_init() {
 
 	return true;
 }
-
 
 bool node_register(Composite* node, char* name) {
 	for(int i = 0; i < node->node_count; i++) {
@@ -121,42 +120,33 @@ bool fd_add(int fd) {
 	return true;
 }
 
-void fd_remove(int fd) {
+bool fd_remove(int fd) {
 	if(!list_remove_data(manager->fds, (void*)(int64_t)fd))
-		return;
+		return false;
 
 	/* File descriptor information update */
 	manager->fd_count--;
 	update_fd_info();
+
+	return true;
 }
 
 Manager* get_manager() {
 	return manager;
 }
 
-NI* nic_attach(PhysicalPort* port) {
-	NI* ni = ni_create(NULL, port);
+NI* port_attach(Port* port, int type) {
+	NI* ni = ni_create(port, type);
 	if(!ni)
 		return NULL;
 
 	// NOTE: fd is same as network interface index.
 	int fd = ni->ni_context->fd;
 	manager->nis[fd] = ni;
-	port->fd = fd;
-
-	return ni;
-}
-
-
-NI* port_attach(VirtualPort* port) {
-	NI* ni = ni_create(port, NULL);
-	if(!ni)
-		return NULL;
-
-	// NOTE: fd is same as network interface index.
-	int fd = ni->ni_context->fd;
-	manager->nis[fd] = ni;
-	port->fd = fd;
+	if(type == NODE_TYPE_PHYSICAL_PORT)
+		((PhysicalPort*)port)->fd = fd;
+	else if(type == NODE_TYPE_VIRTUAL_PORT)
+		((VirtualPort*)port)->fd = fd;
 
 	return ni;
 }

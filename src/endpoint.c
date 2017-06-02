@@ -32,7 +32,7 @@ EndPoint* endpoint_create(int port_count, int type, void* context) {
                     PhysicalPort* port = (PhysicalPort*)end->nodes[0];
                     strcpy(port->ifname, (char*)context);
 
-                    if(!(port->ni = nic_attach(port)))
+                    if(!(port->ni = port_attach((Port*)port, NODE_TYPE_PHYSICAL_PORT)))
                         break;
 
                     if(!(physical_send_port_create(port)))
@@ -64,7 +64,7 @@ EndPoint* endpoint_create(int port_count, int type, void* context) {
                     for(int j = 0; j < end->node_count; j++) {
                         VirtualPort* port = (VirtualPort*)end->nodes[j];
 
-                        if(!(port->ni = port_attach(port)))
+                        if(!(port->ni = port_attach((Port*)port, NODE_TYPE_VIRTUAL_PORT)))
                             break;
                     }
 

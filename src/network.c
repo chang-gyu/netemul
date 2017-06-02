@@ -12,26 +12,27 @@
 #include "composite.h"
 
 //static int debug = 0;
-void network_process(VirtualPort* port, Packet* packet) {
+void network_process(Port* port, Packet* packet) {
 	if(!port->is_active || !port->owner->is_active)
+
 		goto failed;
 
 	if(!port->out)
 		goto failed;
-/*
-	Ether* ether = (Ether*)(packet->buffer + packet->start);
+	/*
+	   Ether* ether = (Ether*)(packet->buffer + packet->start);
 
-	if(endian16(ether->type) == ETHER_TYPE_IPv4) {
-		IP* ip = (IP*)ether->payload;
+	   if(endian16(ether->type) == ETHER_TYPE_IPv4) {
+	   IP* ip = (IP*)ether->payload;
 
-		if(ip->protocol == IP_PROTOCOL_ICMP) {
-			if(!strcmp("p0.0", port->name)) {
-				printf("port: %s debug: %d\n", port->name, debug++);
-				packet_dump(packet);
-			}
-		}
-	}
-*/
+	   if(ip->protocol == IP_PROTOCOL_ICMP) {
+	   if(!strcmp("p0.0", port->name)) {
+	   printf("port: %s debug: %d\n", port->name, debug++);
+	   packet_dump(packet);
+	   }
+	   }
+	   }
+	   */
 	if(!fifo_push(port->out->queue, packet))
 		goto failed;
 

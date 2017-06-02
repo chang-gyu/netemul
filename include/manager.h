@@ -46,11 +46,11 @@ void node_unregister(char* name);
  */
 Node* get_node(char* name);
 bool fd_add(int fd);
-void fd_remove(int fd);
+bool fd_remove(int fd);
 Manager* get_manager();
 
-NI* nic_attach(PhysicalPort* port);
-NI* port_attach(VirtualPort* port);
+//NI* nic_attach(PhysicalPort* port);
+NI* port_attach(Port* port, int type);
 void port_detach(NI* ni);
 
 #endif /* __MANAGER_H__ */

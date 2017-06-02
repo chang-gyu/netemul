@@ -17,117 +17,117 @@
 #include "sketch.h"
 
 static void usage(const char* cmd) {
-	printf("\nUsage :\n");
-        for(int i = 0; commands[i].name != NULL; i++) {
-                if(strcmp(cmd, commands[i].name) == 0) {
-			printf("\t%s %s\n\n", cmd, commands[i].args);
-                }
+    printf("\nUsage :\n");
+    for(int i = 0; commands[i].name != NULL; i++) {
+        if(strcmp(cmd, commands[i].name) == 0) {
+            printf("\t%s %s\n\n", cmd, commands[i].args);
         }
+    }
 }
 
 static int cmd_exit(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-	printf("Network Emulator Terminated ...\n");
-	printf("(Virtual Machines need to be turned off first)\n");
-	exit(0);
+    printf("Network Emulator Terminated ...\n");
+    printf("(Virtual Machines need to be turned off first)\n");
+    exit(0);
 
-	return 0;
+    return 0;
 }
 
 static int cmd_list(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
-	bool list(int type) {
-		void list_component(const char* device_name, List* list) {
-			printf("\t%s\n", device_name);
-			printf("\t=======================================\n");
-			ListIterator iter;
-			list_iterator_init(&iter, list);
+    bool list(int type) {
+        void list_component(const char* device_name, List* list) {
+            printf("\t%s\n", device_name);
+            printf("\t=======================================\n");
+            ListIterator iter;
+            list_iterator_init(&iter, list);
 
-			while(list_iterator_has_next(&iter)) {
-				Node* node = list_iterator_next(&iter);
-				node->get(node);
-			}
-			printf("\n");
-		}
+            while(list_iterator_has_next(&iter)) {
+                Node* node = list_iterator_next(&iter);
+                node->get(node);
+            }
+            printf("\n");
+        }
 
-		Manager* manager = get_manager();
+        Manager* manager = get_manager();
 
-		MapIterator iter;
-		map_iterator_init(&iter, manager->nodes);
+        MapIterator iter;
+        map_iterator_init(&iter, manager->nodes);
 
-		List* components = list_create(NULL);
-		if(!components)
-			return false;
+        List* components = list_create(NULL);
+        if(!components)
+            return false;
 
-		while(map_iterator_has_next(&iter)) {
-			MapEntry* entry = map_iterator_next(&iter);
-			Node* node = (Node*)entry->data;
+        while(map_iterator_has_next(&iter)) {
+            MapEntry* entry = map_iterator_next(&iter);
+            Node* node = (Node*)entry->data;
 
-			if(node->type == type)
-				if(!list_add(components, node))
-					return false;
-		}
+            if(node->type == type)
+                if(!list_add(components, node))
+                    return false;
+        }
 
-		switch(type) {
+        switch(type) {
             case NODE_TYPE_PHYSICAL:
-				list_component("Physical", components);
+                list_component("Physical", components);
                 break;
-			case NODE_TYPE_HOST:
-				list_component("Host", components);
-				break;
-			case NODE_TYPE_HUB_SWITCH:
-				list_component("Hub Switch", components);
-				break;
-			case NODE_TYPE_ETHER_SWITCH:
-				list_component("Ether Switch", components);
-				break;
-			case NODE_TYPE_LINK:
-				list_component("Link", components);
-				break;
-		}
+            case NODE_TYPE_HOST:
+                list_component("Host", components);
+                break;
+            case NODE_TYPE_HUB_SWITCH:
+                list_component("Hub Switch", components);
+                break;
+            case NODE_TYPE_ETHER_SWITCH:
+                list_component("Ether Switch", components);
+                break;
+            case NODE_TYPE_LINK:
+                list_component("Link", components);
+                break;
+        }
 
-		list_destroy(components);
+        list_destroy(components);
 
-		return true;
-	}
+        return true;
+    }
 
-	void label(const char* label) {
-		printf("%s\n", label);
-		printf("===============================================\n");
-	}
+    void label(const char* label) {
+        printf("%s\n", label);
+        printf("===============================================\n");
+    }
 
-	if(!((argc == 1) || (argc == 2)))
-		return CMD_STATUS_WRONG_NUMBER;
+    if(!((argc == 1) || (argc == 2)))
+        return CMD_STATUS_WRONG_NUMBER;
 
 
-	if(argc == 2) {
-		if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "physical") == 0)) {
+    if(argc == 2) {
+        if((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "physical") == 0)) {
             label("Physical Ports");
             if(!list(NODE_TYPE_PHYSICAL))
                 return -1;
 
         } else if((strcmp(argv[1], "-v") == 0) || (strcmp(argv[1], "host") == 0)) {
-			label("Virtual Ports");
-			if(!list(NODE_TYPE_HOST))
-				return -1;
+            label("Virtual Ports");
+            if(!list(NODE_TYPE_HOST))
+                return -1;
 
-		} else if((strcmp(argv[1], "-l") == 0) || (strcmp(argv[1], "link") == 0)) {
-			label("Link");
-			if(!list(NODE_TYPE_LINK))
-				return -1;
+        } else if((strcmp(argv[1], "-l") == 0) || (strcmp(argv[1], "link") == 0)) {
+            label("Link");
+            if(!list(NODE_TYPE_LINK))
+                return -1;
 
-		} else if((strcmp(argv[1], "-s") == 0) || (strcmp(argv[1], "switch") == 0)) {
-			label("Ethernet Switch");
-			if(!list(NODE_TYPE_ETHER_SWITCH))
-				return -1;
+        } else if((strcmp(argv[1], "-s") == 0) || (strcmp(argv[1], "switch") == 0)) {
+            label("Ethernet Switch");
+            if(!list(NODE_TYPE_ETHER_SWITCH))
+                return -1;
 
-		} else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "hub") == 0)) {
-			label("Hub Switch");
-			if(!list(NODE_TYPE_HUB_SWITCH))
-				return -1;
-		} else {
-			usage(argv[0]);
-			return CMD_STATUS_NOT_FOUND;
-		}
-	} else {
+        } else if((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "hub") == 0)) {
+            label("Hub Switch");
+            if(!list(NODE_TYPE_HUB_SWITCH))
+                return -1;
+        } else {
+            usage(argv[0]);
+            return CMD_STATUS_NOT_FOUND;
+        }
+    } else {
         label("Physical Ports");
         if(!list(NODE_TYPE_PHYSICAL))
             return -1;
@@ -536,12 +536,12 @@ static int execute_cmd(char* line, bool is_dump) {
         } else {
             printf("%d'std argument type wrong\n", exit_status); 
         }
-    printf("> ");
-    fflush(stdout);
+        printf("> ");
+        fflush(stdout);
 
-    return exit_status;
+        return exit_status;
+    }
 }
-
 #define MAX_LINE_SIZE		2048
 void command_process(int fd) {
     char line[MAX_LINE_SIZE] = {0, };

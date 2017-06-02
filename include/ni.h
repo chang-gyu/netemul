@@ -20,12 +20,14 @@ typedef struct {
 typedef struct _NI NI;
 struct _NI {
     NI_Context* ni_context;
+    Port* port;
+    int type;
     /* Attached port to this(if not using, NULL) */
-    VirtualPort* vport;
-    PhysicalPort* pport;
+//    VirtualPort* vport;
+  //  PhysicalPort* pport;
 };
 
-NI* ni_create(VirtualPort* vport, PhysicalPort* pport);
+NI* ni_create(Port* port, int type);
 void ni_destroy(NI* ni);
 
 #endif /* __NI_H__*/

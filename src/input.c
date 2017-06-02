@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>	//exit 
 #include <string.h>
 #include <readline.h>
 #include <unistd.h>
@@ -16,7 +17,7 @@
 
 /* Packet processing buffer */
 #define PACKET_BUF_SIZE		2048
-
+#define ALIGN
 static bool input_process(void* context) {
 	Manager* manager = get_manager();
 
@@ -28,9 +29,8 @@ static bool input_process(void* context) {
 	int ret = select(manager->nfds, &temp, NULL, NULL, &tv);
 
 	if(ret == -1) {
-        //??
 		perror("Selector error");
-		return false;
+		exit(-1);
 	} else if(ret) {
 		for(int i = 0; i < manager->fd_count; i++) {
 			int fd = (int64_t)list_get(manager->fds, i);
@@ -41,21 +41,24 @@ static bool input_process(void* context) {
 					command_process(fd);
 				} else {
 					/* Process input packet */
-					Packet* packet = (Packet*)malloc(sizeof(Packet) + PACKET_BUF_SIZE);
-                    //FIXME: packet null check
-                    int size = read(fd, packet->buffer, PACKET_BUF_SIZE);
-                    //FIXME: return error check
-//                    packet_dump(packet);
+					Packet* packet = (Packet*)malloc(sizeof(Packet) + PACKET_BUF_SIZE + (ALIGN -1));
+					if(!packet)
+						continue;
 
-					packet->start = 0;
+					packet->start = (((uint64_t)packet->buffer + (ALIGN - 1)) & ~(ALIGN - 1)) - (uint64_t)packet->buffer;
+
+					Port* port = manager->nis[fd]->port;
+					int size = read(fd, packet->buffer + packet->start, PACKET_BUF_SIZE);
+					if(size < 0) {
+						port->destroy((Node*)port);
+						perror("Error\n");
+						free(packet);
+						continue;
+					}
+
 					packet->end = packet->start + size;
 
 					// NOTE: fd is same as network interface index.
-                    // FIXME: 
-					void* port = manager->nis[fd]->vport;
-                    if(port == NULL)
-                        port = manager->nis[fd]->pport;
-
 					network_process(port, packet);
 				}
 			}
