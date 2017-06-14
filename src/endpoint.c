@@ -6,7 +6,6 @@
 #include "host.h"
 #include "physical.h"
 
-
 EndPoint* endpoint_create(int port_count, int type, void* context) {
 	EndPoint* end;
 	char* name;

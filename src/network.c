@@ -3,8 +3,6 @@
 #include <malloc.h>
 
 #include <net/packet.h>
-//#include <net/ether.h>
-//#include <net/ip.h>
 #include <util/event.h>
 
 #include "port.h"

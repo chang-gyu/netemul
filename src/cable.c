@@ -2,9 +2,7 @@
 #include <string.h>		// For strcmp, memset
 #include <math.h>		// For stdev(sqrt, log, cos, sin)
 #include <values.h>		// For stdev(DBL_MIN)
-
 #include <malloc.h>		// For print
-
 #include <timer.h>
 #include <util/types.h>
 #include <util/event.h>
@@ -68,7 +66,7 @@ static bool set(Node* this, int argc, char** argv) {
 	return true;
 }
 
-static void get(Node* this) {
+static char* get(Node* this) {
 	Cable* cable = (Cable*)this;
 
 	printf("Activity   Bandwidth   Latency(Variant)   Error Rate   Drop Rate\n");

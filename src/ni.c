@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <linux/if.h>
+//#include <linux/if.h>
 #include <linux/if_tun.h>
 #include <errno.h>
 #include <arpa/inet.h>
@@ -18,6 +18,15 @@
 
 #include "ni.h"
 #include "manager.h"
+
+#include <sys/types.h>
+#include <net/if.h>
+#include <net/ethernet.h>
+
+#include <linux/if_packet.h>
+//#include <net/if_arp.h>
+#include <arpa/inet.h>
+
 
 static int do_chflags(const char *dev, uint32_t flags, uint32_t mask) {
 	int get_ctl_fd(void) {

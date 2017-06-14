@@ -34,8 +34,11 @@ static bool set(Node* this, int argc, char** argv) {
 	return false;
 }
 
-static void get(Node* this) {
-	printf("Get function for '%s' is not implemented\n", this->name);
+static char* get(Node* this) {
+	char* result = (char*)malloc(128);
+	sprintf(result, "Get function for '%s' is not implemented\n", this->name);
+
+	return result;
 }
 
 static void packet_forward(Component* this, Packet* packet) {

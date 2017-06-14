@@ -24,7 +24,6 @@ bool manager_init() {
 
 	/* Event machine init */
 	event_init();
-
 	/* External interface preparation */
 	manager->fds = list_create(NULL);
 	if(!manager->fds)

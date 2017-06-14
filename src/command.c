@@ -249,6 +249,102 @@ static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exi
     return 0;
 }
 
+static int cmd_tree(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
+	TreeNode* check_link(Node* node, List* list, TreeNode* parent, char* out_node) {
+		char temp[8];
+		if(node->type < 100)
+			return NULL;
+
+		Composite* _composite = (Composite*)node;
+
+		ListIterator iter;
+		list_iterator_init(&iter, list);
+		while(list_iterator_has_next(&iter)) {
+			Link* link = list_iterator_next(&iter);
+
+			for(int i = 0; i < _composite->node_count; i++) {
+				memset(temp, 0, sizeof(temp));
+				sprintf(temp, "%s.%d", _composite->name, i);
+				for(int j = 0; j < link->node_count; j++) {
+					Cable* cable = (Cable*)link->nodes[j];
+
+					if(!strcmp(temp, cable->in->name)) { 
+						//TreeNode* rtn = tree_add(parent, link);
+						list_remove_data(list, link);
+						strcpy(out_node, cable->out->name);
+						//return rtn;
+						return parent;
+					}
+				}
+			}
+		} 
+		return NULL;
+	}
+
+	char* check_node(Node* node, List* list, TreeNode* parent) {
+		Composite* composite = (Composite*)node;
+		for(int i = 0; i < composite->node_count; i++) {
+			char out_node_name[8];
+			TreeNode* rtn = check_link(get_node(node->name), list, parent, out_node_name);
+			if(!rtn) {
+				break;
+			} else {
+				char temp[8];	
+				memcpy(temp, out_node_name, strlen(out_node_name) + 1);
+				strtok(temp, ".");
+
+				Node* out_node = get_node(temp);	
+				TreeNode* tree = tree_add(rtn, out_node);
+				check_node(out_node, list, tree);
+			}
+		}
+		return NULL;
+	}
+
+	if(argc != 2)
+		return CMD_STATUS_WRONG_NUMBER;
+
+	Manager* manager = get_manager();
+
+	MapIterator iter;
+	map_iterator_init(&iter, manager->nodes);	//composite iter.
+
+	List* composites = list_create(NULL);
+	if(!composites)
+		return false;
+
+	while(map_iterator_has_next(&iter)) {
+		MapEntry* entry = map_iterator_next(&iter);
+		Node* node = (Node*)entry->data;
+
+		if(node->type == NODE_TYPE_LINK)
+			if(!list_add(composites, node)) {
+				list_destroy(composites);
+				return -1;
+			}
+	}
+
+	tree_init();
+
+	Node* node = get_node(argv[1]);
+	if(!node) {
+		usage(argv[0]);
+		printf("Node '%s' does not exist\n", argv[1]);
+		list_destroy(composites);
+		return -1;
+	}
+
+	TreeNode* this = tree_add(tree_get_root(), node);
+	check_node(node, composites, this);
+
+	sketch(tree_get_root(), 0, 0);
+	printf("%s", sketch_render());
+	tree_destroy(tree_get_root());
+	list_destroy(composites);
+
+	return 0;
+}
+
 static int cmd_create(int argc, char** argv, void(*callback)(char* result, int exit_status)) {
     if(!((argc >= 2) && (argc <= 4))) {
         return CMD_STATUS_WRONG_NUMBER;
@@ -451,6 +547,7 @@ static int cmd_get(int argc, char** argv, void(*callback)(char* result, int exit
 
     return 0;
 }
+
 
 Command commands[] = {
     {

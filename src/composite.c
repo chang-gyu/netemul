@@ -5,6 +5,7 @@
 #include "composite.h"
 #include "manager.h"
 #include "cable.h"
+#include "bridge.h"
 
 static void destroy(Node* this) {
 	Composite* composite = (Composite*)this;
@@ -33,27 +34,31 @@ static bool set(Node* this, int argc, char** argv) {
 	return false;
 }
 
-static void get(Node* this) {
+static char* get(Node* this) {
+	char* result = (char*)malloc(1024);
+
 	Composite* composite = (Composite*)this;
 
 	printf("\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/");
 	printf("\t\t-------------------------------\n");
 	printf("\t\t");
 	for(int i = 0; i < composite->node_count; i++) {
-		printf("[%02d] ", i);
+		sprintf(result, "%s[%02d] ", result, i);
 	}
-	printf("\n");
+	sprintf(result, "%s\n", result);
 
-	printf("\t\t");
+	sprintf(result, "%s\t\t", result);
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
 		if(component->out)
 			printf(" %-4s", component->out->owner->name);
 		else
-			printf(" --  ");
+			sprintf(result, "%s --  ", result);
 	}
-	printf("\n\n");
+	sprintf(result, "%s\n\n", result);
+
+	return result;		//TODO malloc size check
 }
 
 bool composite_inherit(Composite* composite) {

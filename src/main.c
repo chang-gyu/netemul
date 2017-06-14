@@ -7,9 +7,11 @@
 
 #include <util/event.h>
 
+#include "bridge.h"
 #include "version.h"
 #include "manager.h"
 #include "command.h"
+#include "rpc_manager.h"
 
 static void help() {
 	printf("Usage: netemul [Options]\n");
@@ -27,10 +29,19 @@ int main(int argc, char** argv) {
 
 	/* Process option for program */
 	static const struct option options[] = {
-		{ .name = "help", .val = 'h' },
-		{ .name = "version", .val = 'v' },
-		{ .name = "script", .has_arg = required_argument, .val = 's' },
-		{ 0 }
+		{
+		.name = "help",
+		.val = 'h' },
+		{
+		.name = "version",
+		.val = 'v' },
+		{
+		.name = "script",
+		.has_arg = required_argument,
+		.val = 's' },
+		{
+		0
+		}
 	};
 
 	char* script;
@@ -63,6 +74,9 @@ int main(int argc, char** argv) {
 	/* Create network emulator manager */
 	if(!manager_init())
 		return -1;
+
+	if(rpc_manager_init() != 0)
+		return -2;
 
 	printf("\nWelcome to PacketNgin Network Emulator\n\n");
 

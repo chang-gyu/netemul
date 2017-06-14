@@ -5,7 +5,7 @@ PacketNgin NetEmul is Network Emulator, a tool for making virtualized network to
 PacketNgin NetEmul depends on PacketNgin libraries. however, you don't need to download PacketNgin library because it is already in the package of NetEmul.
 
 If you have a problem during compiling OS, please visit PacketNgin website and follow install guide <http://packetngin.org>.
-       
+
 ##Guides and Howtos
 
 #####Download PacketNgin NetEmul & compile(for linux)
@@ -15,7 +15,6 @@ If you have a problem during compiling OS, please visit PacketNgin website and f
     $ ./premake5 gmake
     $ make
      
-    
 #####Execution guide
 
     $sudo ./netemul [OPTIONS]
@@ -39,7 +38,7 @@ To quit the Network Emulator.
 To list the available commands and it's usage.
 
     $ help
-    
+
 To list information about nodes. If type of node is not specified, list up all node information.
 
     $ list [NODE_TYPE]
@@ -61,15 +60,16 @@ To list information about nodes. If type of node is not specified, list up all n
 > Hub : Ethernet dummy hub switch.
 >> **hub** | **-h**
 >
-    
+
 To create network nodes.
 
 	$ create [NODE_TYPE] [OPTIONS]
-    
+
 More Specifically.
 
 	$ create physical [PHYSICAL NETWORK INTERFACE NAME]
 	$ create host [PORT_COUNT]
+	$ create bridge [PHYSICAL NETWORK INTERFACE)
 	$ create link [NODE] [NODE]
 	$ create switch [PORT_COUNT]
 	$ create hub [PORT_COUNT]
@@ -81,7 +81,7 @@ More Specifically.
 >
 > It it is not given, default counts of specific node used.
 >> Switch and Hub : **16**
->> Host : **4** 
+>> Host : **4**
 
 * _NODE_
 
@@ -96,40 +96,39 @@ More Specifically.
 >> First port of host *v0* : **v0.0**
 >> Second port of switch *s0* : **s0.1**
 
-    
+
 To destroy network nodes.
-    
+
     $ destroy [NODE]
-    
+
 To activate network node.
 
     $ on [NODE]
-    
+
 To deactivate network node.
 
     $ off [NODE]
-    
+
 To get information of specific node. Information is diffrent by node type.
 
     $ get [NODE]
-    
+
 > Host and Hub switch : list of all ports and connected node in that port.
 >
 > Ethernet Switch : + MAC filtering table information.
 >
 > Link : two devices connected by this link.
-   
-To set attributes of specific node. 
+
+To set attributes of specific node.
 
     $ set [NODE] [OPTIONS]
-    
-Currently, this command is only for setting port of link. Users can use this command for controlling network like bandwidth limitation of link.
+
 
 * _OPTIONS_
 
 > Bandwidth - network bandwidth for unidirectional cable. it's bytes format.
->> **band: 0 ~ 100,000,000** 
-> 
+>> **band: 0 ~ 100,000,000**
+>
 > Packet error rate - packet loss rate in a second. It's ratio format. 1 means 100% packet loss. 0 means packet loss never occured.
 >> **error_rate: 0.0 ~ 1.0**
 >
