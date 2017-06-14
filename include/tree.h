@@ -9,7 +9,7 @@ struct _TreeNode {
 	TreeNode* parent;
 	TreeNode* children[MAX_CHILDRUN_COUNT];
 	int count;
-}; 
+};
 
 #endif /* __TREE_H__ */
 
@@ -19,6 +19,6 @@ uint32_t tree_get_count();
 void tree_init();
 TreeNode* tree_add(TreeNode* parent, void* data);
 TreeNode* tree_search(TreeNode* tree, void* data);
-uint32_t tree_get_children_cnt(TreeNode* node); 
+uint32_t tree_get_children_cnt(TreeNode* node);
 void tree_destroy(TreeNode* this);
 

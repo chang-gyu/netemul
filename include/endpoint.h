@@ -5,10 +5,10 @@
 #include "composite.h"
 
 /* Class EndPoint extends Composite */
-typedef struct { 
+typedef struct {
 	Composite;
 } EndPoint;
 
-EndPoint* endpoint_create(int port_count, int type);
+EndPoint* endpoint_create(int port_count, int type, void* context);
 
 #endif /* __NE_H__ */

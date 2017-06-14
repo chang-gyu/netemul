@@ -11,12 +11,8 @@ bool switch_unicast(Port* port, Packet* packet) {
 	if(!port->out)
 		return false;
 
-#ifdef NET_CONTROL
 	if(!fifo_push(port->out->queue, packet))
 		return false;
-#else
-	port->out->send(port->out, packet);
-#endif
 
 	return true;
 }

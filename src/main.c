@@ -13,17 +13,6 @@
 #include "command.h"
 #include "rpc_manager.h"
 
-#ifdef __LINUX
-#include <signal.h>		//signal
-#include <stdlib.h> 	//exit
-
-void signal_exit() {
-		printf("\n===============================================\nbye!\n");
-		bridge_destroy();
-
-		exit(0);
-}
-
 static void help() {
 	printf("Usage: netemul [Options]\n");
 	printf("Option:\n");
@@ -33,8 +22,6 @@ static void help() {
 }
 
 int main(int argc, char** argv) {
-	signal(SIGINT, (void*)signal_exit);
-
 	if(geteuid() != 0) {
 		printf("Permssion denied : $./sudo netemul \n");
 		return -1;
@@ -110,52 +97,3 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
-#else
-#include <thread.h>
-void ginit(int argc, char** argv) {
-}
-
-void init(int argc, char** argv) {
-}
-
-void destroy() {
-}
-
-void gdestroy() {
-}
-
-int main(int argc, char** argv) {
-	printf("Thread %d booting\n", thread_id());
-
-	if(thread_id() == 0) {
-		ginit(argc, argv);
-	}
-	thread_barrior();
-
-	init(argc, argv);
-
-	thread_barrior();
-
-	/* Create network emulator manager */
-	if(!manager_init())
-		return -1;
-
-	printf("\nWelcome to PacketNgin Network Emulator\n\n");
-
-	/* Event machine start */
-	while(1)
-		event_loop();
-
-	thread_barrior();
-
-	destory();
-
-	thread_barrior();
-
-	if(thread_id() == 0) {
-		gdestroy(argc, argv);
-	}
-
-	return 0;
-}
-#endif

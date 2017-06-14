@@ -25,21 +25,20 @@ bool manager_init() {
 
 	/* Event machine init */
 	event_init();
+<<<<<<< HEAD
 #ifdef __LINUX
+=======
+>>>>>>> origin/v2
 	/* External interface preparation */
 	manager->fds = list_create(NULL);
 	if(!manager->fds)
 		return false;
-#else
-	/* for packetngin nic init */
-	ni_init();
-#endif
-
+	/* command & network input processing init */
 	cmd_init();
 	input_init();
 	bridge_init();
 
-//	 Internal emulation prepartion
+	/* Internal emulation prepartion */
 	manager->nodes = map_create(MAX_NODE_COUNT, map_string_hash, map_string_equals, NULL);
 	if(!manager->nodes)
 		return false;
@@ -53,20 +52,18 @@ bool manager_init() {
 	return true;
 }
 
+<<<<<<< HEAD
 #ifndef __LINUX
 static char* str[] = { ".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7",
 					   ".8", ".9", ".10", ".11", ".12", ".13", ".14", ".15" };
 #endif
 
+=======
+>>>>>>> origin/v2
 bool node_register(Composite* node, char* name) {
 	for(int i = 0; i < node->node_count; i++) {
-#ifdef __LINUX
 		sprintf(node->nodes[i]->name, "%s.%d", node->name, i);
-#else
-		int len = strlen(name);
-		strncpy(node->nodes[i]->name, name, 2);
-		strncpy(node->nodes[i]->name + len, str[i], 3);
-#endif
+
 		if(!list_add(manager->components, node->nodes[i]))
 			return false;
 	}
@@ -136,27 +133,35 @@ bool fd_add(int fd) {
 	return true;
 }
 
-void fd_remove(int fd) {
+bool fd_remove(int fd) {
 	if(!list_remove_data(manager->fds, (void*)(int64_t)fd))
-		return;
+		return false;
 
 	/* File descriptor information update */
 	manager->fd_count--;
 	update_fd_info();
+
+	return true;
 }
 
 Manager* get_manager() {
 	return manager;
 }
 
+<<<<<<< HEAD
 NI* port_attach(EndPointPort* port) {
 #ifdef __LINUX
 	NI* ni = NULL;
 	ni = ni_create(port);
+=======
+NI* port_attach(Port* port, int type) {
+	NI* ni = ni_create(port, type);
+>>>>>>> origin/v2
 	if(!ni)
 		return NULL;
 
 	// NOTE: fd is same as network interface index.
+<<<<<<< HEAD
 	int fd = ni->ti->fd;
 	manager->nis[fd] = ni;
 	port->fd = fd;
@@ -174,15 +179,22 @@ NI* port_attach(EndPointPort* port) {
 		}
 	}
 #endif
+=======
+	int fd = ni->ni_context->fd;
+	manager->nis[fd] = ni;
+	if(type == NODE_TYPE_PHYSICAL_PORT)
+		((PhysicalPort*)port)->fd = fd;
+	else if(type == NODE_TYPE_VIRTUAL_PORT)
+		((VirtualPort*)port)->fd = fd;
+
+>>>>>>> origin/v2
 	return ni;
 }
 
 void port_detach(NI* ni) {
-#ifdef __LINUX
 	ni_destroy(ni);
-#else
-	ni->used = 0;
-	ni->nic = NULL;
-#endif
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/v2

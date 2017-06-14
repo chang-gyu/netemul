@@ -36,7 +36,7 @@ static TreeNode* _add(TreeNode* parent, void* data) {
 TreeNode* tree_add(TreeNode* parent, void* data) {
 	TreeNode* node = NULL;
 
-	if(root == NULL) {
+	if(root == NULL && parent == NULL) {
 		node = _add(NULL, data);
 		root = node;
 	} else {
@@ -92,7 +92,7 @@ uint32_t tree_get_children_cnt(TreeNode* tree) {
 	return cnt;
 }
 
-static void _destroy(TreeNode* tree) {
+void _destroy(TreeNode* tree) {
 	for(int i = 0; i < MAX_CHILDRUN_COUNT; i++) {
 		if(tree->children[i] != NULL) {
 			_destroy(tree->children[i]);

@@ -14,7 +14,7 @@
  */
 typedef struct {
 	Port*		port;		///< Destination port.
-	uint64_t	mac;		///< Destination MAC address. 
+	uint64_t	mac;		///< Destination MAC address.
 	int		age;		///< Left time for living (seconds).
 	time_t		timeout;	///< Deadline of entity (milli-seconds).
 } MACTableEntity;
@@ -49,7 +49,7 @@ static char* list_table(EtherSwitch* s) {
 		if(ageing < 0)
 			continue;
 
-		for(int i = 0; i < 6; i++) 
+		for(int i = 0; i < 6; i++)
 			mac[i] = (entity->mac >> (5 - i) * 8) & 0xff;
 
 		sprintf(result, "\t\t%4d\t%02x:%02x:%02x:%02x:%02x:%02x \t%04f\n", get_portnum(port),
@@ -71,9 +71,9 @@ static bool update_table(Cache* table, Packet* packet, Port* port) {
 		/* Add new entity */
 		entity = (MACTableEntity*)malloc(sizeof(MACTableEntity));
 		entity->mac = (uint64_t)ether->smac;
-		entity->age = 120; // 2 min 
+		entity->age = 120; // 2 min
 		entity->port = port;
-		entity->timeout = current + 1000 * entity->age; 
+		entity->timeout = current + 1000 * entity->age;
 
 		if(!cache_set(table, (void*)(uint64_t)ether->smac, (void*)entity)) {
 			printf("Cache setting failed\n");
@@ -98,7 +98,7 @@ static bool update_table(Cache* table, Packet* packet, Port* port) {
 		}
 		entity->port = port;	//If port is changed, renew port.
 	}
-	
+
 	return true;
 }
 
@@ -108,9 +108,12 @@ static char* get(Node* this) {
 	char* result = (char*)malloc(1024);
 	memset(result, 0, 1024);
 
-	sprintf(result, "\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/"); 
-	sprintf(result, "%s\t\t-------------------------------\n", result);
-	sprintf(result, "%s\t\t", result);
+	char* result = (char*)malloc(1024);
+	memset(result, 0, 1024);
+
+	printf("\t\t%s\t\t\t   %s\n", composite->name, composite->is_active? "/ON/": "/OFF/");
+	printf("\t\t-------------------------------\n");
+	printf("\t\t");
 	for(int i = 0; i < composite->node_count; i++) {
 		sprintf(result, "%s[%02d] ", result, i);
 	}
@@ -120,8 +123,8 @@ static char* get(Node* this) {
 	for(int i = 0; i < composite->node_count; i++) {
 		Component* component = (Component*)composite->nodes[i];
 
-		if(component->out) 
-			sprintf(result, "%s %-4s", result, component->out->owner->name);
+		if(component->out)
+			printf(" %-4s", component->out->owner->name);
 		else
 			sprintf(result, "%s --  ", result);
 	}
@@ -136,7 +139,7 @@ static char* get(Node* this) {
 static void ether_switch_send(Component* this, Packet* packet) {
 	Port* port = (Port*)this;
 	if(!port->is_active || !port->owner->is_active) {
-		printf("Node %s is inactive\n", port->name); 
+		printf("Node %s is inactive\n", port->name);
 		goto failed;
 	}
 
@@ -150,20 +153,20 @@ static void ether_switch_send(Component* this, Packet* packet) {
 	Ether* ether = (Ether*)(packet->buffer + packet->start);
 	MACTableEntity* entity = (MACTableEntity*)cache_get(s->table, (void*)(uint64_t)ether->dmac);
 	if(!entity) {
-		if(!switch_broadcast(port, packet)) 
+		if(!switch_broadcast(port, packet))
 			goto failed;
 	} else {
 		Port* dst = entity->port;
-		if(dst == port) 
+		if(dst == port)
 			// Do not send myself
 			goto failed;
 
-		if(!switch_unicast(dst, packet)) 
+		if(!switch_unicast(dst, packet))
 			goto failed;
 	}
 
 	return;
-	
+
 failed:
 	//TODO: packetngin nic_free apply.
 	free(packet);
@@ -171,12 +174,12 @@ failed:
 
 static void ether_switch_destroy(Node* this) {
 	EtherSwitch* s = (EtherSwitch*)this;
-	node_unregister(s->name);	
+	node_unregister(s->name);
 
 	if(!s->nodes) {
 		for(int i = 0; i < s->node_count; i++) {
 			Component* component = s->nodes[i];
-			if(!component) 
+			if(!component)
 				component->destroy((Node*)component);
 		}
 
@@ -201,7 +204,7 @@ Switch* ether_switch_create(int port_count) {
 
 	s->type = NODE_TYPE_ETHER_SWITCH;
 	s->node_count = port_count;
-	
+
 	/* Inherit */
 	if(!composite_inherit((Composite*)s))
 		goto failed;
@@ -213,7 +216,7 @@ Switch* ether_switch_create(int port_count) {
 
 	/* Method overriding */
 	for(int i = 0; i < s->node_count; i++)
-		s->nodes[i]->send = ether_switch_send; 
+		s->nodes[i]->packet_forward = ether_switch_send; 
 	s->destroy = ether_switch_destroy;
 	s->get = get;
 

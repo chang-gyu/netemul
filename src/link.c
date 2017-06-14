@@ -13,9 +13,9 @@ static char* get(Node* this) {
 	Component* src = cable->in;
 	Component* dst = cable->out;
 
-	sprintf(result, "\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/"); 
-	sprintf(result, "\t\t-------------------------------\n");
-	sprintf(result, "\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL", 
+	printf("\t\t%s\t\t\t   %s\n", link->name, link->is_active? "/ON/": "/OFF/");
+	printf("\t\t-------------------------------\n");
+	printf("\t\t%3s -- %3s -- %3s\n\n", (src != NULL)? src->name: "NULL",
 			cable->owner->name, (dst != NULL)? dst->name: "NULL");
 
 
@@ -39,7 +39,7 @@ static bool set(Node* this, int argc, char** argv) {	//set l0 latency: 10
 }
 /**
  * Find out node is available for connecting.
- * 
+ *
  * @return available component reference or NULL if nothing available.
  */
 static Component* is_available(Node* node) {
@@ -48,14 +48,14 @@ static Component* is_available(Node* node) {
 
 		for(int i = 0; i < composite->node_count; i++) {
 			if(composite->nodes[i]->in == NULL) {
-				return composite->nodes[i]; 
+				return composite->nodes[i];
 			}
 		}
 
 		return NULL;
 	} else {
 		Component* component = (Component*)node;
-		if(!component->out) 
+		if(!component->out)
 			return component;
 
 		return NULL;
@@ -90,12 +90,12 @@ static Link* _link_create(Node* source, Node* destination) {
 		goto failed;
 
 	/* Extends */
-	void connect_cable(Component* source, Component* cable0, 
+	void connect_cable(Component* source, Component* cable0,
 			Component* cable1, Component* destination) {
-		/*		
-		 *		(out)	--> Cable0 --> (in)	 
+		/*
+		 *		(out)	--> Cable0 --> (in)
 		 *  Source					Destination
-		 *		(in)	<-- Cable1 <-- (out)		    
+		 *		(in)	<-- Cable1 <-- (out)
 		 */
 		source->out = cable0;
 		source->in = cable1;
@@ -111,7 +111,7 @@ static Link* _link_create(Node* source, Node* destination) {
 	}
 
 	connect_cable(src, link->nodes[0], link->nodes[1], dst);
-	
+
 	/* Method overriding */
 	link->get = get;
 	link->set = set;
@@ -119,7 +119,7 @@ static Link* _link_create(Node* source, Node* destination) {
 	return link;
 
 failed:
-	link->destroy((Node*)link); 
+	link->destroy((Node*)link);
 	return NULL;
 
 
@@ -137,13 +137,7 @@ Link* link_create(Node* source, Node* destination) {
 	bool result = false;
 
 	for(int i = 0; i < MAX_NODE_COUNT; i++) {
-#ifdef __LINUX
 		sprintf(&name[1], "%d", i);
-#else
-		static char st = '0';
-		strcpy(&name[1], &st);		
-		st =+ 1;
-#endif
 
 		if(!get_node(name)) {
 			result = node_register((Composite*)link, name);

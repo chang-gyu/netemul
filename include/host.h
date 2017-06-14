@@ -5,7 +5,7 @@
 #include "ni.h"
 
 /* Class Host extends EndPoint */
-typedef struct { 
+typedef struct {
 	EndPoint;
 } Host;
 

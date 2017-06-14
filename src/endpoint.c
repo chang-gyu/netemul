@@ -4,61 +4,81 @@
 #include "endpoint.h"
 #include "manager.h"
 #include "host.h"
-#include "bridge.h"
+#include "physical.h"
 
-EndPoint* endpoint_create(int port_count, int type) {
+EndPoint* endpoint_create(int port_count, int type, void* context) {
 	EndPoint* end;
 	char* name;
+	bool result;
 
 	switch(type) {
+		case NODE_TYPE_PHYSICAL:
+			if(!(end = physical_create()))
+				return NULL;
+
+			name = end->name;
+			name[0] = 'p'; // 'pc'
+
+			result = false;
+			/* Register endpoint to network emulator manager */
+			for(int i = 0; i < MAX_NODE_COUNT; i++) {
+				sprintf(&name[1], "%d", i);
+
+				if(!get_node(name)) {
+					if(!node_register((Composite*)end, name))
+						break;
+
+					PhysicalPort* port = (PhysicalPort*)end->nodes[0];
+					strcpy(port->ifname, (char*)context);
+
+					if(!(port->ni = port_attach((Port*)port, NODE_TYPE_PHYSICAL_PORT)))
+						break;
+
+					if(!(physical_send_port_create(port)))
+						break;
+
+					result = true;
+					break;
+				}
+
+			}
+			break;
+
 		case NODE_TYPE_HOST:
 			if(!(end = host_create(port_count)))
 				return NULL;
 
 			name = end->name;
-			name[0] = 'p'; // 'hc'
+			name[0] = 'v'; // 'vc'
+
+			result = false;
+			/* Register endpoint to network emulator manager */
+			for(int i = 0; i < MAX_NODE_COUNT; i++) {
+				sprintf(&name[1], "%d", i);
+
+				if(!get_node(name)) {
+					if(!node_register((Composite*)end, name))
+						break;
+
+					for(int j = 0; j < end->node_count; j++) {
+						VirtualPort* port = (VirtualPort*)end->nodes[j];
+
+						if(!(port->ni = port_attach((Port*)port, NODE_TYPE_VIRTUAL_PORT)))
+							break;
+					}
+
+					result = true;
+					break;
+				}
+
+			}
 			break;
-		case NODE_TYPE_BRIDGE:
-			if(!(end = bridge_create()))  
-				return NULL;
-			name = end->name;
-			name[0] = 'b'; // 'bc'
-			break;
-			
 
 		default:
 			return NULL;
 	}
 
-#ifndef __LINUX
-#include <net/nic.h>
-	Manager* manager = get_manager();
-	if(nic_count() < manager->nic_count + port_count)
-		goto failed;
-#endif
-	bool result = false;
-	/* Register endpoint to network emulator manager */
-
-	for(int i = 0; i < MAX_NODE_COUNT; i++) {
-		sprintf(&name[1], "%d", i);
-
-		if(!get_node(name)) {
-			if(!node_register((Composite*)end, name))
-				break;
-
-			for(int j = 0; j < end->node_count; j++) {
-				EndPointPort* port = (EndPointPort*)end->nodes[j];
-
-				if(!(port->ni = port_attach(port))) 
-					break;
-			}
-
-			result = true;
-			break;
-		}
-	}
-
-	if(!result) 
+	if(!result)
 		goto failed;
 
 	return end;

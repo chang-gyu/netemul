@@ -4,10 +4,10 @@
 #include "switch.h"
 
 /**
- * Ethernet switch. 
+ * Ethernet switch.
  *
  * It switches packets using MAC filtering table.
- */ 
+ */
 
 /* Class EtherSwitch extends Switch */
 typedef struct {

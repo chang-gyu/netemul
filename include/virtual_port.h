@@ -1,5 +1,5 @@
-#ifndef __ENDPOINT_PORT_H__
-#define __ENDPOINT_PORT_H__
+#ifndef __VIRTUAL_PORT_H__
+#define __VIRTUAL_PORT_H__
 
 #include "port.h"
 
@@ -13,9 +13,9 @@ typedef struct {
     /* Attached NI to this */
     NI*         ni;
     int         fd;
-} EndPointPort;
+} VirtualPort;
 
-Port* endpoint_port_create();
+Port* virtual_port_create();
 
-#endif /* __ENDPOINT_PORT_H__ */
+#endif /* __VIRTUAL_PORT_H__ */
 

@@ -10,19 +10,29 @@
 #include "composite.h"
 
 //static int debug = 0;
-void network_process(EndPointPort* port, Packet* packet) {
-	if(!port->is_active || !port->owner->is_active) 
+void network_process(Port* port, Packet* packet) {
+	if(!port->is_active || !port->owner->is_active)
+
 		goto failed;
 
-	if(!port->out) 
+	if(!port->out)
 		goto failed;
-	
-#ifdef NET_CONTROL
-	if(!fifo_push(port->out->queue, packet)) 
+	/*
+	   Ether* ether = (Ether*)(packet->buffer + packet->start);
+
+	   if(endian16(ether->type) == ETHER_TYPE_IPv4) {
+	   IP* ip = (IP*)ether->payload;
+
+	   if(ip->protocol == IP_PROTOCOL_ICMP) {
+	   if(!strcmp("p0.0", port->name)) {
+	   printf("port: %s debug: %d\n", port->name, debug++);
+	   packet_dump(packet);
+	   }
+	   }
+	   }
+	   */
+	if(!fifo_push(port->out->queue, packet))
 		goto failed;
-#else
-	port->out->send(port->out, packet);
-#endif
 
 	return;
 
@@ -30,7 +40,7 @@ failed:
 	free_func(packet);
 }
 
-
+// budget
 static bool network_control(void* context) {
 	Manager* manager = get_manager();
 
@@ -42,20 +52,17 @@ static bool network_control(void* context) {
 		FIFO* queue = component->queue;
 		Packet* packet;
 		while((packet = (Packet*)fifo_pop(queue))) {
-			component->send(component, packet);
+			component->packet_forward(component, packet);
 
 			return true;
 		}
-		
 	}
 
 	return true;
 }
 
 void network_init() {
-#ifdef NET_CONTROL
-	/* Network control start */ 
+	/* Network control start */
 	event_busy_add(network_control, NULL);
-#endif
 }
 

@@ -4,7 +4,7 @@
 #include "node.h"
 #include "component.h"
 
-/* Class Composite implements Node */ 
+/* Class Composite implements Node */
 typedef struct _composite Composite;
 struct _composite {
 	Node;
@@ -17,7 +17,7 @@ struct _composite {
 bool composite_inherit(Composite* composite);
 
 static inline bool is_composite(Node* node) {
-	return (node->type >= COMPOSITE_TYPE) ? true : false;	
+	return (node->type >= COMPOSITE_TYPE) ? true : false;
 }
 
 #endif /* __COMPOSITE_H__ */
