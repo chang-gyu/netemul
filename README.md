@@ -1,23 +1,19 @@
-# PacketNgin Network Emulator
-PacketNgin Network Emulator is a tool for making virtualized network topology.
+# PacketNgin NetEmul
+PacketNgin NetEmul is Network Emulator, a tool for making virtualized network topology.
 
 ##Getting Started
-PacketNgin Network Emaultor depends on PacketNgin RTOS and PacketNgin libraries. You need to download PacketNgin RTOS SDK(Software Development Kit) first.
+PacketNgin NetEmul depends on PacketNgin libraries. however, you don't need to download PacketNgin library because it is already in the package of NetEmul.
 
-##### Download PacketNgin RTOS & compile
-
-    $ mv /your/home/
-    $ git clone https://github.com/packetngin/rtos os
-    $ mv os & make
-       
 If you have a problem during compiling OS, please visit PacketNgin website and follow install guide <http://packetngin.org>.
        
 ##Guides and Howtos
 
-#####Download PacketNgin Network Emulator & compile
+#####Download PacketNgin NetEmul & compile(for linux)
 
     $ git clone https://github.com/packetngin/netemul
-    $ mv netemul & make
+    $ cd netemul
+    $ ./premake5 gmake
+    $ make
      
     
 #####Execution guide
@@ -50,7 +46,10 @@ To list information about nodes. If type of node is not specified, list up all n
 
 * _NODE_TYPE_
 
-> Host : End point device. 
+> Physical : Physical End point device. 
+>> **host** | **-p**
+>
+> Host : Virtual End point device. 
 >> **host** | **-p**
 >
 > Link : Connection link between two nodes.
@@ -69,10 +68,11 @@ To create network nodes.
     
 More Specifically.
 
-	$ create switch [PORT_COUNT]
-	$ create hub [PORT_COUNT]
+	$ create physical [PHYSICAL NETWORK INTERFACE NAME]
 	$ create host [PORT_COUNT]
 	$ create link [NODE] [NODE]
+	$ create switch [PORT_COUNT]
+	$ create hub [PORT_COUNT]
     
 * _PORT_COUNT_
 
@@ -86,13 +86,14 @@ More Specifically.
 * _NODE_
 
 > Name of node. It will be automatically given like this.
->> Host    : **p0, p1, p2 ...**
->> Switch  : **s0, s1, s2 ...**
->> Hub     : **h0, h1, h1 ...**
->> Link    : **l0, l1, l2 ...**
+>> Physical : **p0, p1, p2 ...**
+>> Host     : **v0, v1, v2 ...**
+>> Switch   : **s0, s1, s2 ...**
+>> Hub      : **h0, h1, h1 ...**
+>> Link     : **l0, l1, l2 ...**
 >
 > And also it can be specific port of node like this.
->> First port of host *p0* : **p0.0**
+>> First port of host *v0* : **v0.0**
 >> Second port of switch *s0* : **s0.1**
 
     
@@ -140,13 +141,13 @@ Currently, this command is only for setting port of link. Users can use this com
 
 
 ##API
-We provides API lists for developers : [Documentation on the Network Emulator API](http://packetngin.org/assets/doxy/index.html "PacketNgin Emulator API")
+We provides API lists for developers : [Documentation on the NetEmul API](http://packetngin.org/assets/doxy/index.html "PacketNgin NetEmul API")
 
 ##Contact
 Contact to our company by <contact@gurum.cc><br>
-Inquiry about development by <youseok@gurum.cc><br>
+Inquiry about development by <changgyu@gurum.cc><br>
 GurunmNetworks <http://gurum.cc><br>
 PacketNgin OpenSource <http://packetngin.org><br>
 
 ##Licenses
-PacketNgin Network Emulator is licensed under GPL2
+PacketNgin NetEmul is licensed under GPL2

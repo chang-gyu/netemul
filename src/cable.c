@@ -15,7 +15,7 @@
 #include "component.h"
 #include "cable.h"
 
-bool set(Node* this, int argc, char** argv) {
+static bool set(Node* this, int argc, char** argv) {
 	Cable* cable = (Cable*)this;
 	char* flag = NULL;
 	double temp;
@@ -96,7 +96,7 @@ static bool _packet_forward(void* context) {
 	return false;
 }
 
-double generateGaussianNoise(double average, double stdev) {
+static double generateGaussianNoise(double average, double stdev) {
 #define EPSILON	DBL_MIN
 #define TWO_PI	(2.0 * 3.14159265358979323846)
 

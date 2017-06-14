@@ -36,7 +36,7 @@ static TreeNode* _add(TreeNode* parent, void* data) {
 TreeNode* tree_add(TreeNode* parent, void* data) {
 	TreeNode* node = NULL;
 
-	if(root == NULL) {
+	if(root == NULL && parent == NULL) {
 		node = _add(NULL, data);
 		root = node;
 	} else {
